@@ -1,0 +1,25 @@
+follow_path
+
+self.initial_pose_dict = {}
+        for row in range(2):
+            for col in range(5):
+                id = row * 5 + col + 1
+                agt_id = f'robot_{id}'
+                x = -6.0 + col * 3.0
+                y = -8.0 + row * 9.0
+                yaw = random.uniform(pi/4, 3*pi/4)
+                self.initial_pose_dict[agt_id] = {'x': x, 'y': y, 'yaw': yaw}
+
+        self.goal_pose_dict = {}
+        for row in range(2):
+            for col in range(5):
+                id = row * 5 + col + 1
+                agt_id = f'robot_{id}'
+                x = -6.0 + col * 3.0
+                y = -4.0 + row * 9.0
+                yaw = random.uniform(pi/4, 3*pi/4)
+                self.goal_pose_dict[agt_id] = {'x': x, 'y': y, 'yaw': yaw}
+
+
+
+zigzag

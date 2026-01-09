@@ -1,0 +1,28 @@
+image: zigzag.pgm
+resolution: 0.1
+origin: [-8.0, -8.5, 0.0]
+negate: 0
+occupied_thresh: 0.65
+free_thresh: 0.196
+
+
+#         self.initial_pose_dict = {}
+#         for row in range(2):
+#             for col in range(5):
+#                 id = row * 5 + col + 1
+#                 agt_id = f'robot_{id}'
+#                 x = -6.0 + col * 3.0 - 0.5 if row == 0 else -6.0 + col * 3.0 + 0.5
+#                 y = -7.0 + row * 8.0
+#                 # yaw = random.uniform(pi/4, 3*pi/4)
+#                 yaw = pi/2
+#                 self.initial_pose_dict[agt_id] = {'x': x, 'y': y, 'yaw': yaw}
+
+#         self.goal_pose_dict = {}
+#         for row in range(2):
+#             for col in range(5):
+#                 id = row * 5 + col + 1
+#                 agt_id = f'robot_{id}'
+#                 x = -6.0 + col * 3.0 + 0.5 if row == 0 else -6.0 + col * 3.0 - 0.5
+#                 y = -1.0 + row * 8.0
+#                 yaw = pi/2
+#                 self.goal_pose_dict[agt_id] = {'x': x, 'y': y, 'yaw': yaw}

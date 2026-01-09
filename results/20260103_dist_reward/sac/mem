@@ -1,0 +1,37 @@
+sim1
+    CONTROLLER_FREQ = 10  # [Hz] コントローラの制御周期
+    """ステップ頻度"""
+    STEP_FREQ = 20
+    """タイムアウト時間"""
+    SIMULATION_TIMEOUT = 25  # [秒] エピソードの最大実行時間
+    """報酬"""
+    REWARD_COLLISION           = -50.0   # 衝突時のペナルティ
+    REWARD_GOAL                =  50.0   # ゴール到達時の報酬
+    REWARD_STEP                =  -0.02       # ステップ毎のペナルティ(時間経過ペナルティ)
+    # REWARD_BACKWARD            = -0.1     # 後退ペナルティ
+    REWARD_SUBGOAL_COEF        =  15.0     # サブゴール距離差分報酬係数(自律移動の総経路帳に応じて修正スべき？)
+
+    TARGET_PLAN_POINT_IDX = 2            # 目標とするglobalPlanの点のインデックス
+
+    timesteps: 2.5e6
+    map: follow_path
+
+sim2
+    CONTROLLER_FREQ = 20  # [Hz] コントローラの制御周期
+    """ステップ頻度"""
+    STEP_FREQ = 10
+    """タイムアウト時間"""
+    SIMULATION_TIMEOUT = 40  # [秒] エピソードの最大実行時間
+    """報酬"""
+    REWARD_COLLISION           = -50.0   # 衝突時のペナルティ
+    REWARD_GOAL                =  50.0   # ゴール到達時の報酬
+    REWARD_STEP                =  -0.15       # ステップ毎のペナルティ(時間経過ペナルティ)
+    # REWARD_BACKWARD            = -0.1     # 後退ペナルティ
+    REWARD_SUBGOAL_COEF        =  10.0     # サブゴール距離差分報酬係数(自律移動の総経路帳に応じて修正スべき？)
+
+    TARGET_PLAN_POINT_IDX = 2            # 目標とするglobalPlanの点のインデックス
+
+    timesteps: 2.5e6
+    map: obs
+
+    

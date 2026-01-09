@@ -1,0 +1,34 @@
+sim1
+
+
+    """タイムアウト時間"""
+    SIMULATION_TIMEOUT = 50  # [秒] エピソードの最大実行時間
+    SPAWN_TIMEOUT = 10       # [秒] スポーンの最大待機時間
+
+    CONTACT_DETECTION_START_DELAY = 0.4
+
+
+    STEP_FREQ = 10      # [Hz] step関数の実行周期
+
+    MAX_POINTS = 20     # globalPlanの点数
+    DUMMY_VAL  = 0  # ダミー値
+
+    """位置推定誤差の許容値"""
+    POSITION_TOLERANCE = 0.01  # [m] ゴール到達判定用のAMCL位置誤差許容値
+    YAW_TOLERANCE = 0.002      # [rad] ゴール到達判定用のAMCL姿勢誤差許容値
+
+    """報酬"""
+    REWARD_COLLISION   = -200.0  # 衝突時の報酬(罰則)
+    REWARD_ACHIEVED    =  200.0  # ゴール到達時の報酬
+    REWARD_STEP        = -0.5
+    REWARD_FORWARD     =  1.0    # 制御入力に対する報酬係数
+    REWARD_ANGLE =  0.2  # 角度誤差に対する報酬係数
+    REWARD_BACKWARD    = -0.5  # 後退ペナルティ
+
+    TARGET_PLAN_POINT_IDX = 5  # ゴールから数えて何番目の点を目標とするか（0始まり）
+
+    cos^1
+
+sim2
+
+    cos^3

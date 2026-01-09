@@ -1,0 +1,35 @@
+/**:
+  ros__parameters:
+    # ----------------------------------------------------------------
+    # 共通設定
+    # ----------------------------------------------------------------
+    use_sim_time: true
+    update_rate: 30
+
+
+    diff_drive_controller:
+      type: diff_drive_controller/DiffDriveController
+
+
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+
+    # ----------------------------------------------------------------
+    # Diff Drive Controller (および各ノード) 用の設定
+    # ----------------------------------------------------------------
+    left_wheel_names: ["left_wheel_joint"]
+    right_wheel_names: ["right_wheel_joint"]
+    wheel_separation: 0.35
+    wheel_radius: 0.05
+
+
+    # ★ここが重要: false にして Twist型 (Unstamped) にする
+    use_stamped_vel: false
+
+
+    enable_odom_tf: true
+    base_frame_id: "base_link"
+    odom_frame_id: "odom"
+    pose_covariance_diagonal: [0.001, 0.001, 0.0, 0.0, 0.0, 0.01]
+    twist_covariance_diagonal: [0.001, 0.0, 0.0, 0.0, 0.0, 0.01]

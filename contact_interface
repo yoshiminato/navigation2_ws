@@ -1,0 +1,74 @@
+user304@user304:~$ ros2 interface show ros_gz_interfaces/msg/Contacts
+std_msgs/Header header                  # Time stamp
+	builtin_interfaces/Time stamp
+		int32 sec
+		uint32 nanosec
+	string frame_id
+ros_gz_interfaces/Contact[] contacts   # List of contacts
+	ros_gz_interfaces/Entity collision1        #
+		uint8 NONE      = 0
+		uint8 LIGHT     = 1
+		uint8 MODEL     = 2
+		uint8 LINK      = 3
+		uint8 VISUAL    = 4
+		uint8 COLLISION = 5
+		uint8 SENSOR    = 6
+		uint8 JOINT     = 7
+		uint64 id      #
+		string name    #
+		uint8 type     #
+	ros_gz_interfaces/Entity collision2        #
+		uint8 NONE      = 0
+		uint8 LIGHT     = 1
+		uint8 MODEL     = 2
+		uint8 LINK      = 3
+		uint8 VISUAL    = 4
+		uint8 COLLISION = 5
+		uint8 SENSOR    = 6
+		uint8 JOINT     = 7
+		uint64 id      #
+		string name    #
+		uint8 type     #
+	geometry_msgs/Vector3[] positions           #
+		float64 x
+		float64 y
+		float64 z
+	geometry_msgs/Vector3[] normals             #
+		float64 x
+		float64 y
+		float64 z
+	float64[] depths                            #
+	ros_gz_interfaces/JointWrench[] wrenches   #
+		std_msgs/Header header                  #
+			builtin_interfaces/Time stamp
+				int32 sec
+				uint32 nanosec
+			string frame_id
+		std_msgs/String body_1_name             #
+			string data
+		std_msgs/UInt32 body_1_id               #
+			uint32 data
+		std_msgs/String body_2_name             #
+			string data
+		std_msgs/UInt32 body_2_id               #
+			uint32 data
+		geometry_msgs/Wrench body_1_wrench      #
+			Vector3  force
+				float64 x
+				float64 y
+				float64 z
+			Vector3  torque
+				float64 x
+				float64 y
+				float64 z
+		geometry_msgs/Wrench body_2_wrench      #
+			Vector3  force
+				float64 x
+				float64 y
+				float64 z
+			Vector3  torque
+				float64 x
+				float64 y
+				float64 z
+user304@user304:~$ 
+
