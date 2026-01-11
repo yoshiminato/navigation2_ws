@@ -100,7 +100,7 @@ MIN_LINEAR_VEL = -0.35  # 最小並進速度 [m/s]
 MAX_ANGULAR_VEL = 1.9  # 最大回転速度 [rad/s]
 
 COSTMAP_SIZE = 30  # コストマップの一辺のサイズ
-COSTMAP_BUFFER_SIZE = 1  # コストマップのバッファサイズ（過去何フレーム分保持するか）
+COSTMAP_BUFFER_SIZE = 4  # コストマップのバッファサイズ（過去何フレーム分保持するか）
 
 
 """コントローラの状態定義"""
@@ -187,56 +187,12 @@ class Nav2ParallelEnv(ParallelEnv, Node):
         self.log_path, self.error_log_path = get_unique_log_file_path()
 
         self.initial_poses = {}
-        for row in range(2):
-            for col in range(5):
-                id = row * 5 + col + 1
-                agt_id = f'robot_{id}'
-                x = -8.0 + col * 4.0
-                y = -7.0 + row * 9.0
-                yaw = random.uniform(pi/4, 3*pi/4)
-                self.initial_poses[agt_id] = Pose(x=x, y=y, yaw=yaw)
-
         self.goal_pose_dict = {}
-        for row in range(2):
-            for col in range(5):
-                id = row * 5 + col + 1
-                agt_id = f'robot_{id}'
-                x = -7.0 + col * 4.0
-                y = -2.0 + row * 9.0
-                yaw = random.uniform(pi/4, 3*pi/4)
-                self.goal_pose_dict[agt_id] = Pose(x=x, y=y, yaw=yaw)
-
-        # self.initial_poses = {}
-        # for row in range(2):
-        #     for col in range(5):
-        #         id = row * 5 + col + 1
-        #         agt_id = f'robot_{id}'
-        #         x = -6.0 + col * 3.0 - 0.5 if row == 0 else -6.0 + col * 3.0 + 0.5
-        #         y = -7.0 + row * 8.0
-        #         # yaw = random.uniform(pi/4, 3*pi/4)
-        #         yaw = pi/2
-        #         self.initial_poses[agt_id] = Pose(x=x, y=y, yaw=yaw)
-
-        # self.goal_pose_dict = {}
-        # for row in range(2):
-        #     for col in range(5):
-        #         id = row * 5 + col + 1
-        #         agt_id = f'robot_{id}'
-        #         x = -6.0 + col * 3.0 + 0.5 if row == 0 else -6.0 + col * 3.0 - 0.5
-        #         y = -1.0 + row * 8.0
-        #         yaw = pi/2
-        #         self.goal_pose_dict[agt_id] = Pose(x=x, y=y, yaw=yaw)
+        self._update_all_agents_pose()
+        
 
         self.obstacle_poses = {}
-        for row in range(2):
-            for col in range(5):
-                id = row * 5 + col + 1
-                agt_id = f'obstacle_{id}'
-                x = -8.0 + col * 4.0
-                y = -3.0 + row * 9.0
-                z = 0.5
-                yaw = 0.0
-                self.obstacle_poses[agt_id] = Pose(x=x, y=y, z=z, yaw=yaw)
+        self._update_all_obstacles_pose()
 
         # PettingZoo必須属性
         self.metadata = {
@@ -417,7 +373,7 @@ class Nav2ParallelEnv(ParallelEnv, Node):
         self.get_logger().info('スポーン中...')
         self._spawn_all_models()
 
-        self._spawn_all_obstacles()
+        # self._spawn_all_obstacles()
 
         self.get_logger().info('全ロボットのinitialposeを送信中...')
         self._initialize_all_agents_pose()
@@ -452,11 +408,11 @@ class Nav2ParallelEnv(ParallelEnv, Node):
 
         self.get_logger().info('全エージェントを削除中...')
         self._delete_all_models()
-        self._delete_all_obstacles()
+        # self._delete_all_obstacles()
         time.sleep(1.0)
         self.get_logger().info('再スポーン中...')
         self._spawn_all_models()
-        self._spawn_all_obstacles()
+        # self._spawn_all_obstacles()
         time.sleep(1.0)
 
         for _ in range(50):
@@ -560,26 +516,13 @@ class Nav2ParallelEnv(ParallelEnv, Node):
             np.zeros(COSTMAP_SIZE*COSTMAP_SIZE*COSTMAP_BUFFER_SIZE, dtype=np.float32),                # 画像: 0
             np.full(1, -np.inf, dtype=np.float32),            # 速度
             np.full(1, -np.inf, dtype=np.float32),            # 角速度
-            # np.full(MAX_POINTS*2, -np.inf, dtype=np.float32), # プラン
-            # np.zeros(MAX_POINTS, dtype=np.float32)            # マスク
             np.full(1, -pi, dtype=np.float32),  # 角度誤差(yaw)
-            # np.full(1, -np.inf, dtype=np.float32),  # 距離
-            # np.full(1, -pi, dtype=np.float32),  # ゴール距離
-            # # np.full(1, -pi, dtype=np.float32),  # ゴール姿勢(yaw)
-            # # np.full(1, 0, dtype=np.float32),  # プラン点数
-
         ])
         high = np.concatenate([
             np.full(COSTMAP_SIZE*COSTMAP_SIZE*COSTMAP_BUFFER_SIZE, 255, dtype=np.float32),            # 画像: 255
             np.full(1, np.inf, dtype=np.float32),             # 速度
             np.full(1, np.inf, dtype=np.float32),             # 角速度
-            # np.full(MAX_POINTS*2, np.inf, dtype=np.float32),  # プラン
-            # np.ones(MAX_POINTS, dtype=np.float32)             # マスク
             np.full(1, pi, dtype=np.float32),  # 角度誤差(yaw)
-                # np.full(1, np.inf, dtype=np.float32),  # 距離
-                # np.full(1, pi, dtype=np.float32),  # ゴール距離
-            # np.full(1, pi, dtype=np.float32),  # ゴール姿勢(yaw)
-            # np.full(1, MAX_POINTS, dtype=np.float32),  # プラン点数
         ])
         return Box(low=low, high=high, dtype=np.float32)
 
@@ -596,12 +539,51 @@ class Nav2ParallelEnv(ParallelEnv, Node):
         """
         全エージェントのスポーン位置情報を更新する
         """
+        # obs
+        # for row in range(2):
+        #     for col in range(5):
+        #         id = row * 5 + col + 1
+        #         agt_id = f'robot_{id}'
+        #         x = -8.0 + col * 4.0
+        #         y = -7.0 + row * 9.0
+        #         yaw = random.uniform(-pi, pi)
+        #         self.initial_poses[agt_id] = Pose(x=x, y=y, yaw=yaw)
+    
+        # for row in range(2):
+        #     for col in range(5):
+        #         id = row * 5 + col + 1
+        #         agt_id = f'robot_{id}'
+        #         x = -8.0 + col * 4.0
+        #         y = -2.0 + row * 9.0
+        #         yaw = random.uniform(3*pi/4, pi/4)
+        #         self.goal_pose_dict[agt_id] = Pose(x=x, y=y, yaw=yaw)
+
+        # obs 交差環境
+        # for row in range(2):
+        #     for col in range(5):
+        #         id = row * 5 + col + 1
+        #         agt_id = f'robot_{id}'
+        #         x = -8.0 + col * 4.0
+        #         y = -7.0 if row == 0 else -2.0
+        #         yaw = random.uniform(-pi, pi)
+        #         self.initial_poses[agt_id] = Pose(x=x, y=y, yaw=yaw)
+    
+        # for row in range(2):
+        #     for col in range(5):
+        #         id = row * 5 + col + 1
+        #         agt_id = f'robot_{id}'
+        #         x = -8.0 + col * 4.0
+        #         y = -2.0 if row == 0 else -7.0
+        #         yaw = random.uniform(3*pi/4, pi/4)
+        #         self.goal_pose_dict[agt_id] = Pose(x=x, y=y, yaw=yaw)
+
+        # follow_path 交差環境
         for row in range(2):
             for col in range(5):
                 id = row * 5 + col + 1
                 agt_id = f'robot_{id}'
-                x = -8.0 + col * 4.0
-                y = -7.0 + row * 9.0
+                x = -6.0 + col * 3.0
+                y = -7.0 if row == 0 else -2.0
                 yaw = random.uniform(-pi, pi)
                 self.initial_poses[agt_id] = Pose(x=x, y=y, yaw=yaw)
     
@@ -609,8 +591,8 @@ class Nav2ParallelEnv(ParallelEnv, Node):
             for col in range(5):
                 id = row * 5 + col + 1
                 agt_id = f'robot_{id}'
-                x = -8.0 + col * 4.0
-                y = -2.0 + row * 9.0
+                x = -6.0 + col * 3.0
+                y = -2.0 if row == 0 else -7.0
                 yaw = random.uniform(3*pi/4, pi/4)
                 self.goal_pose_dict[agt_id] = Pose(x=x, y=y, yaw=yaw)
 
@@ -645,12 +627,10 @@ class Nav2ParallelEnv(ParallelEnv, Node):
         # コストマップバッファーの作成(観測に複数フレーム使用する場合)
         self.costmaps_buffer = {}
         for agt_id in self.agents:
-            # maxlen=4 の deque を作成
             dq = deque(maxlen=COSTMAP_BUFFER_SIZE)
             dummy_map = np.full(COSTMAP_SIZE * COSTMAP_SIZE, 255, dtype=np.float32)
             for _ in range(COSTMAP_BUFFER_SIZE):
                 dq.append(dummy_map)
-                
             self.costmaps_buffer[agt_id] = dq
     
         self.costmaps                       = {agt_id: None  for agt_id in self.agents}
@@ -720,8 +700,8 @@ class Nav2ParallelEnv(ParallelEnv, Node):
             costmap = rotated_costmap.flatten()
 
             # costmap = costmap.flatten()
-            # self._update_buffer(agt_id, costmap)
-            # costmap_buffer = np.array(self.costmaps_buffer[agt_id]).flatten()
+            self._update_buffer(agt_id, costmap)
+            costmap_buffer = np.array(self.costmaps_buffer[agt_id]).flatten()
             vel = vels.get(agt_id, np.zeros(1, dtype=np.float32))
             if vel is None:
                 vel = np.zeros(1, dtype=np.float32)
@@ -734,7 +714,7 @@ class Nav2ParallelEnv(ParallelEnv, Node):
             ang_error = np.array([ang_error], dtype=np.float32)
             ang_error = ang_error.flatten()
 
-            obs_vec = np.concatenate([costmap, vel, ang_vel, ang_error], axis=0)
+            obs_vec = np.concatenate([costmap_buffer, vel, ang_vel, ang_error], axis=0)
 
             observations[agt_id] = obs_vec 
 
@@ -841,7 +821,8 @@ class Nav2ParallelEnv(ParallelEnv, Node):
         if self.states[agt_id] != ControllerState.RUNNING:
             return
         
-
+        if self.sim_time is None or self.ep_starttime is None:
+            return
         if self.sim_time - self.ep_starttime < CONTACT_DETECTION_START_DELAY:
             # スポーン直後の誤検知を防ぐため、一定時間は無視
             return  

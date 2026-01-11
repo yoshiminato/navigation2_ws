@@ -45,8 +45,8 @@ def normalize_angle(angle: float) -> float:
 
     
 HOME = os.path.expanduser('~')
-sdf_dir = os.path.join(HOME, "nav2_ws/sdf_dumps/")
-target_dir = os.path.join(HOME, "nav2_ws/simulation_logs/")
+sdf_dir = os.path.join(HOME, "navigation2_ws/sdf_dumps/")
+target_dir = os.path.join(HOME, "navigation2_ws/simulation_logs/")
 sim_base_name  = "simulation"
 error_base_name = "error"
 ext = ".log"

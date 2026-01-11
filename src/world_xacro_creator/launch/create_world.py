@@ -11,7 +11,7 @@ from launch.actions import RegisterEventHandler
 from launch.event_handlers import OnProcessStart, OnProcessExit
 
 HOME = os.path.expanduser('~')
-ws   = os.path.join(HOME, 'nav2_ws') #ディレクトリ構造に合わせて変更して
+ws   = os.path.join(HOME, 'navigation2_ws') #ディレクトリ構造に合わせて変更して
 
 def launch_setup(context, *args, **kwargs):
    

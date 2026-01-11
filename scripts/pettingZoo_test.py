@@ -1,5 +1,5 @@
 import sys
-sys.path.append('/home/yoshi/nav2_ws/src')
+sys.path.append('/home/yoshi/navigation2_ws/src')
 from parallel_controller_env.parallel_controller_env import Nav2ParallelEnv
 from pettingzoo.test import parallel_api_test
 from stable_baselines3.common.vec_env import VecMonitor
@@ -37,6 +37,7 @@ except ImportError:
     print("Warning: supersuit not installed. Run: pip install supersuit")
 
 policy_kwargs = dict(
+    net_arch=[256, 256],
     features_extractor_class=Nav2CombinedExtractor,
     features_extractor_kwargs=dict(features_dim=256), # 特徴量の出力次元
 )
@@ -140,9 +141,9 @@ if __name__ == "__main__":
                         wrapped_env,
                         policy_kwargs=policy_kwargs,
                         learning_rate=1e-4,
-                        buffer_size=50000,
-                        learning_starts=1000,
-                        batch_size=128,
+                        buffer_size=100000,
+                        learning_starts=5000,
+                        batch_size=256,
                         tau=0.005,
                         gamma=0.99,
                         train_freq=4,
@@ -161,7 +162,7 @@ if __name__ == "__main__":
                         learning_rate=1e-4,
                         buffer_size=50000,
                         learning_starts=2000,
-                        batch_size=128,
+                        batch_size=256,
                         tau=0.005,
                         gamma=0.99,
                         train_freq=4,
@@ -173,7 +174,7 @@ if __name__ == "__main__":
         
         # チェックポイントコールバック（10000ステップごとに保存）
         checkpoint_callback = CheckpointCallback(
-            save_freq=1000,
+            save_freq=10000,
             save_path=f"./checkpoints/{model_path}/",
             name_prefix=f"{alg_name.lower()}_nav2"
         )
@@ -245,7 +246,7 @@ if __name__ == "__main__":
             tile_size = (200, 200) 
 
             COSTMAP_SIZE = 30
-            BUFFER_SIZE = 1
+            BUFFER_SIZE = 4
 
             tile_size = (200, 200)
 

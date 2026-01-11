@@ -11,7 +11,7 @@ from launch.actions import RegisterEventHandler
 from launch.event_handlers import OnProcessStart
 
 HOME = os.path.expanduser('~')
-ws   = os.path.join(HOME, 'nav2_ws') #ディレクトリ構造に合わせて変更して
+ws   = os.path.join(HOME, 'navigation2_ws') #ディレクトリ構造に合わせて変更して
 
 def launch_setup(context, *args, **kwargs):
     robot_count = int(LaunchConfiguration('robot_count').perform(context))
@@ -33,7 +33,7 @@ def launch_setup(context, *args, **kwargs):
     # DDS/環境変数設定
     actions = [
         SetEnvironmentVariable('RMW_IMPLEMENTATION', 'rmw_cyclonedds_cpp'),
-        SetEnvironmentVariable('CYCLONEDDS_URI', f"file://{os.path.expanduser('~')}/nav2_ws/cyclonedds_config.xml"),
+        SetEnvironmentVariable('CYCLONEDDS_URI', f"file://{os.path.expanduser('~')}/navigation2_ws/cyclonedds_config.xml"),
         SetEnvironmentVariable('ROS_DOMAIN_ID', '0'),
         SetEnvironmentVariable('GZ_SIM_LOG_LEVEL', 'error'),
         SetEnvironmentVariable('GZ_LOG_LEVEL', 'error'),
