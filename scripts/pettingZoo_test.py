@@ -76,7 +76,7 @@ if __name__ == "__main__":
     alg_name = args.rl_algorithm
     action_type = algorithm_action_type_map.get(alg_name, 'continuous')
     alg_class = algorithm_class_map.get(alg_name, SAC)
-    model_path = f"{alg_name}_nav2_model"
+    model_path = f"{alg_name.lower()}_nav2_model"
 
     print(f"アルゴリズム: {alg_name}, アクションタイプ: {action_type}")
 
@@ -123,6 +123,7 @@ if __name__ == "__main__":
                     model = alg_class.load(
                         args.load_model, 
                         env=wrapped_env,
+                        exploration_fraction=0.05,
                         exploration_initial_eps=0.1,  # 1.0ではなく0.1から再開
                         exploration_final_eps=0.05,
                     )
@@ -171,6 +172,7 @@ if __name__ == "__main__":
                         verbose=1,
                         tensorboard_log=f"./logs/{model_path}_tensorboard/"
             )
+                    
         
         # チェックポイントコールバック（10000ステップごとに保存）
         checkpoint_callback = CheckpointCallback(
@@ -207,12 +209,14 @@ if __name__ == "__main__":
             
             # モデル保存
             model.save(model_path)
+            model.save_replay_buffer(f"{model_path}_final_buffer")
             print(f"✓ モデルを保存しました: {model_path}.zip")
             
         except KeyboardInterrupt:
             print("\n学習が中断されました")
             model.save(f"{model_path}_interrupted")
             print(f"✓ 中断時のモデルを保存: {model_path}_interrupted.zip")
+            model.save_replay_buffer(f"{model_path}_final_buffer")
         except Exception as e:
             print(f"学習中にエラーが発生: {e}")
             import traceback

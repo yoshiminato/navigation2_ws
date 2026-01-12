@@ -1,0 +1,45 @@
+ignore:
+  nodes:
+    - "/rviz"
+    - "/bridge_ros_gz_clock"
+    # Robot 2
+    - "/robot_2/amcl"
+    - "/robot_2/behavior_server"
+    - "/robot_2/bridge_ros_gz"
+    - "/robot_2/bt_navigator"
+    - "/robot_2/bt_navigator_navigate_through_poses_rclcpp_node"
+    - "/robot_2/bt_navigator_navigate_to_pose_rclcpp_node"
+    - "/robot_2/controller_server"
+    - "/robot_2/global_costmap/global_costmap"
+    - "/robot_2/lifecycle_manager_localization"
+    - "/robot_2/lifecycle_manager_navigation"
+    - "/robot_2/local_costmap/local_costmap"
+    - "/robot_2/map_server"
+    - "/robot_2/nav2_container"
+    - "/robot_2/planner_server"
+    - "/robot_2/robot_state_publisher"
+    # Robot 3
+    - "/robot_3/amcl"
+    - "/robot_3/behavior_server"
+    - "/robot_3/bridge_ros_gz"
+    - "/robot_3/bt_navigator"
+    - "/robot_3/bt_navigator_navigate_through_poses_rclcpp_node"
+    - "/robot_3/bt_navigator_navigate_to_pose_rclcpp_node"
+    - "/robot_3/controller_server"
+    - "/robot_3/global_costmap/global_costmap"
+    - "/robot_3/lifecycle_manager_localization"
+    - "/robot_3/lifecycle_manager_navigation"
+    - "/robot_3/local_costmap/local_costmap"
+    - "/robot_3/map_server"
+    - "/robot_3/nav2_container"
+    - "/robot_3/planner_server"
+    - "/robot_3/robot_state_publisher"
+    # Robot 4, 5, 6 (以下同様に続く... 必要に応じて追加してください)
+  topics:
+    - "/parameter_events"
+    - "/rosout"
+    - "/clock"
+  services:
+    - "/.*get_parameters"
+    - "/.*set_parameters"
+  actions: []

@@ -83,7 +83,7 @@ YAW_TOLERANCE = 0.002      # [rad] ゴール到達判定用のAMCL姿勢誤差�
 
 
 """報酬"""
-REWARD_COLLISION           = -200.0   # 衝突時のペナルティ
+REWARD_COLLISION           = -500.0   # 衝突時のペナルティ
 REWARD_GOAL                =  200.0   # ゴール到達時の報酬
 REWARD_STEP                =  -0.2       # ステップ毎のペナルティ(時間経過ペナルティ)
 REWARD_SUBGOAL_COEF        =  30.0     # サブゴール距離差分報酬係数(自律移動の総経路帳に応じて修正スべき？)
@@ -173,6 +173,12 @@ class Nav2ParallelEnv(ParallelEnv, Node):
     def __init__(self, robot_count=2, world_name="square15", use_rl=False, action_type="continuous", render_mode=None):
         Node.__init__(self, 'nav2_parallel_env')
 
+        self.use_obstacbles = False
+        self.render_mode = render_mode
+        self.robot_count = robot_count
+        self.world_name = world_name
+        self.use_rl = use_rl
+
         # 使用する時間をシミュレータ内時間に設定
         if not self.has_parameter('use_sim_time'):
             self.declare_parameter('use_sim_time', True)
@@ -201,10 +207,6 @@ class Nav2ParallelEnv(ParallelEnv, Node):
             "is_parallelizable": True,
         }
 
-        self.render_mode = render_mode
-        self.robot_count = robot_count
-        self.world_name = world_name
-        self.use_rl = use_rl
 
         self.agents = []
         self.possible_agents = [f"robot_{i+1}" for i in range(self.robot_count)]
@@ -369,11 +371,14 @@ class Nav2ParallelEnv(ParallelEnv, Node):
                 "gmap_client"    : global_costmap_clear_client,
             }
             
+        self.get_logger().info(f'{self.initial_poses}')
+        self.get_logger().info(f'{self.initial_poses.keys()}')
 
         self.get_logger().info('スポーン中...')
         self._spawn_all_models()
 
-        # self._spawn_all_obstacles()
+        if self.use_obstacbles:
+            self._spawn_all_obstacles()
 
         self.get_logger().info('全ロボットのinitialposeを送信中...')
         self._initialize_all_agents_pose()
@@ -408,11 +413,13 @@ class Nav2ParallelEnv(ParallelEnv, Node):
 
         self.get_logger().info('全エージェントを削除中...')
         self._delete_all_models()
-        # self._delete_all_obstacles()
+        if self.use_obstacbles:
+            self._delete_all_obstacles()
         time.sleep(1.0)
         self.get_logger().info('再スポーン中...')
         self._spawn_all_models()
-        # self._spawn_all_obstacles()
+        if self.use_obstacbles:
+            self._spawn_all_obstacles()
         time.sleep(1.0)
 
         for _ in range(50):
@@ -559,42 +566,48 @@ class Nav2ParallelEnv(ParallelEnv, Node):
         #         self.goal_pose_dict[agt_id] = Pose(x=x, y=y, yaw=yaw)
 
         # obs 交差環境
-        # for row in range(2):
-        #     for col in range(5):
-        #         id = row * 5 + col + 1
-        #         agt_id = f'robot_{id}'
-        #         x = -8.0 + col * 4.0
-        #         y = -7.0 if row == 0 else -2.0
-        #         yaw = random.uniform(-pi, pi)
-        #         self.initial_poses[agt_id] = Pose(x=x, y=y, yaw=yaw)
-    
-        # for row in range(2):
-        #     for col in range(5):
-        #         id = row * 5 + col + 1
-        #         agt_id = f'robot_{id}'
-        #         x = -8.0 + col * 4.0
-        #         y = -2.0 if row == 0 else -7.0
-        #         yaw = random.uniform(3*pi/4, pi/4)
-        #         self.goal_pose_dict[agt_id] = Pose(x=x, y=y, yaw=yaw)
+        if self.world_name == "obs":
+            for row in range(2):
+                for col in range(5):
+                    id = row * 5 + col + 1
+                    agt_id = f'robot_{id}'
+                    x = -8.0 + col * 4.0
+                    y = -7.0 + row * 9.0
+                    yaw = random.uniform(-pi, pi)
+                    self.initial_poses[agt_id] = Pose(x=x, y=y, yaw=yaw)
 
-        # follow_path 交差環境
-        for row in range(2):
+            for row in range(2):
+                for col in range(5):
+                    id = row * 5 + col + 1
+                    agt_id = f'robot_{id}'
+                    x = -8.0 + col * 4.0
+                    y = -2.0 + row * 9.0
+                    yaw = random.uniform(3*pi/4, pi/4)
+                    self.goal_pose_dict[agt_id] = Pose(x=x, y=y, yaw=yaw)
+
+        if self.world_name == "follow_path":
+            # follow_path 環境
+            
             for col in range(5):
-                id = row * 5 + col + 1
-                agt_id = f'robot_{id}'
-                x = -6.0 + col * 3.0
-                y = -7.0 if row == 0 else -2.0
-                yaw = random.uniform(-pi, pi)
-                self.initial_poses[agt_id] = Pose(x=x, y=y, yaw=yaw)
-    
-        for row in range(2):
+                for row in range(2):
+                    id = row + col*2 + 1
+                    agt_id = f'robot_{id}'
+                    x = -6.0 + col * 3.0
+                    y = -7.0 if row == 0 else -2.0
+                    yaw = random.uniform(-pi, pi)
+                    self.initial_poses[agt_id] = Pose(x=x, y=y, yaw=yaw)
+        
+            
             for col in range(5):
-                id = row * 5 + col + 1
-                agt_id = f'robot_{id}'
-                x = -6.0 + col * 3.0
-                y = -2.0 if row == 0 else -7.0
-                yaw = random.uniform(3*pi/4, pi/4)
-                self.goal_pose_dict[agt_id] = Pose(x=x, y=y, yaw=yaw)
+                for row in range(2):
+                    id = row + col*2 + 1
+                    agt_id = f'robot_{id}'
+                    x = -6.0 + col * 3.0
+                    y = -2.0 if row == 0 else -7.0
+                    yaw = random.uniform(3*pi/4, pi/4)
+                    self.goal_pose_dict[agt_id] = Pose(x=x, y=y, yaw=yaw)
+            return
+
 
     def _update_all_obstacles_pose(self):
         """

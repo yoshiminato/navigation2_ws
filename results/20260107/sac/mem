@@ -39,3 +39,5 @@ map: obs 障害物あり
 alg: sac
 model: sim1→None
        sim2→sim1
+timestep: sim1→9.5e5
+          sim2→1.7e6

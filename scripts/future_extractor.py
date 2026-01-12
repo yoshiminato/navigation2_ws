@@ -70,6 +70,9 @@
 #         # 5. 全結合層に通して返す
 #         return self.linear(combined)
 
+
+
+### ========================= 複数フレーム用 20261011~ ========================= ###
 import torch
 import torch.nn as nn
 from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
