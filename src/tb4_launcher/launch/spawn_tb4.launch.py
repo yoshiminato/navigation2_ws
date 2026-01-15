@@ -119,6 +119,23 @@ def  launch_nodes(context, *args, **kwargs):
     # topic_path = f'/{namespace}/robot_description' if namespace else '/robot_description'
 
 
+
+    # static_tf_publisher_node = Node(
+    #     package='tf2_ros',
+    #     executable='static_transform_publisher',
+    #     name=f'{namespace}_map_to_odom_tf',
+    #     arguments=[
+    #         '0', '0', '0',      # x y z
+    #         '0', '0', '0',      # roll pitch yaw
+    #         f'{namespace}/map',
+    #         f'{namespace}/odom',
+    #     ],
+    #     output='screen',
+    #     remappings=[
+    #         ('/tf_static', f'/{namespace}/tf_static')
+    #     ]
+    # )
+
     # spawn_model = Node(
     #     condition=IfCondition(use_simulator),
     #     package='ros_gz_sim',
@@ -176,6 +193,8 @@ def  launch_nodes(context, *args, **kwargs):
 
 
     actions.append(bridge)
+    # actions.append(static_tf_publisher_node)
+
     # actions.append(camera_bridge_image)
     # actions.append(camera_bridge_depth)
     # actions.append(spawn_model)

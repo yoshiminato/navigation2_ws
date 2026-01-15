@@ -1,0 +1,31 @@
+sim1
+    """タイムアウト時間"""
+    SIMULATION_TIMEOUT = 50  # [秒] エピソードの最大実行時間
+    SPAWN_TIMEOUT = 10       # [秒] スポーンの最大待機時間
+
+    CONTACT_DETECTION_START_DELAY = 0.4
+
+    STEP_FREQ = 10      # [Hz] step関数の実行周期
+
+    MAX_POINTS = 5     # globalPlanの点数
+    DUMMY_VAL  = 0     # ダミー値
+
+    """位置推定誤差の許容値"""
+    POSITION_TOLERANCE = 0.005  # [m] ゴール到達判定用のAMCL位置誤差許容値
+    YAW_TOLERANCE = 0.002      # [rad] ゴール到達判定用のAMCL姿勢誤差許容値
+
+
+    """報酬"""
+    REWARD_COLLISION           = -500.0   # 衝突時のペナルティ
+    REWARD_GOAL                =  200.0   # ゴール到達時の報酬
+    REWARD_STEP                =  -0.2       # ステップ毎のペナルティ(時間経過ペナルティ)
+    REWARD_SUBGOAL_COEF        =  30.0     # サブゴール距離差分報酬係数(自律移動の総経路帳に応じて修正スべき？)
+    REWARD_HIGH_SPEED_COEF     =  0.0    # 高速移動報酬係数
+    REWARD_BACKWARD            =  -0.1     # 後退ペナルティ
+
+    HIGH_SPEED_DOMAIN          = {'min': 0.35, 'max': 0.5}  # 高速移動とみなす速度域 [m/s]
+
+    TARGET_PLAN_POINT_IDX = 2            # 目標とするglobalPlanの点のインデックス
+
+    robot_count:6
+    world: follow_path

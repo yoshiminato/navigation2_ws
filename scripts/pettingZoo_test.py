@@ -123,12 +123,23 @@ if __name__ == "__main__":
                     model = alg_class.load(
                         args.load_model, 
                         env=wrapped_env,
-                        exploration_fraction=0.05,
-                        exploration_initial_eps=0.1,  # 1.0ではなく0.1から再開
+                        learning_starts=0,
+                        exploration_fraction=0.0,
+                        exploration_initial_eps=0.05,  # 1.0ではなく0.1から再開
                         exploration_final_eps=0.05,
                     )
                 case 'SAC':
-                    model = alg_class.load(args.load_model, env=wrapped_env,)
+                    model = alg_class.load(
+                        args.load_model, 
+                        env=wrapped_env,
+                        learning_starts=0,
+                    )
+                    
+            try:
+                model.load_replay_buffer(f"{args.load_model}")
+                print("✓ リプレイバッファをロードしました")
+            except Exception as e:
+                print(f"Warning: Failed to load replay buffer: {e}")
 
         else:
             print(f"新規{alg_name}モデルを作成")

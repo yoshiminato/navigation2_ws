@@ -1,10 +1,10 @@
 amcl:
   ros__parameters:
-    alpha1: 0.2
-    alpha2: 0.2
-    alpha3: 0.2
-    alpha4: 0.2
-    alpha5: 0.2
+    alpha1: 0.01
+    alpha2: 0.01
+    alpha3: 0.01
+    alpha4: 0.01
+    alpha5: 0.01
     base_frame_id: "<robot_namespace>/base_footprint"
     beam_skip_distance: 0.5
     beam_skip_error_threshold: 0.9
@@ -98,7 +98,7 @@ controller_server:
       yaw_goal_tolerance: 3.15 # 向きを考慮しない
     FollowPath:
       # plugin: "nav2_mppi_controller::MPPIController"
-      # plugin: "nav2_pure_pursuit_controlle0r::PurePursuitController"
+      # plugin: "nav2_pure_pursuit_controller::PurePursuitController"
       plugin: "nav2_rl_controller::RLController"
       # plugin: "dwb_core::DWBLocalPlanner"
 
@@ -341,7 +341,7 @@ map_saver:
 
 planner_server:
   ros__parameters:
-    expected_planner_frequency: 20.0 # 5.0から1.0に下げてCPU負荷を劇的に軽減
+    expected_planner_frequency: 1.0 # 5.0から1.0に下げてCPU負荷を劇的に軽減
     planner_plugins: ["GridBased"]
     GridBased:
       plugin: "nav2_smac_planner::SmacPlanner2D"

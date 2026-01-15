@@ -4,3 +4,4 @@ log
 nav2
 src/navigation2
 cyclonedds_config.xml
+*.pkl

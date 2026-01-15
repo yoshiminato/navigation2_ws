@@ -83,10 +83,10 @@ YAW_TOLERANCE = 0.002      # [rad] ゴール到達判定用のAMCL姿勢誤差�
 
 
 """報酬"""
-REWARD_COLLISION           = -500.0   # 衝突時のペナルティ
+REWARD_COLLISION           = -200.0   # 衝突時のペナルティ
 REWARD_GOAL                =  200.0   # ゴール到達時の報酬
 REWARD_STEP                =  -0.2       # ステップ毎のペナルティ(時間経過ペナルティ)
-REWARD_SUBGOAL_COEF        =  30.0     # サブゴール距離差分報酬係数(自律移動の総経路帳に応じて修正スべき？)
+REWARD_SUBGOAL_COEF        =  40.0     # サブゴール距離差分報酬係数(自律移動の総経路帳に応じて修正スべき？)
 REWARD_HIGH_SPEED_COEF     =  0.0    # 高速移動報酬係数
 REWARD_BACKWARD            =  -0.1     # 後退ペナルティ
 
@@ -173,7 +173,7 @@ class Nav2ParallelEnv(ParallelEnv, Node):
     def __init__(self, robot_count=2, world_name="square15", use_rl=False, action_type="continuous", render_mode=None):
         Node.__init__(self, 'nav2_parallel_env')
 
-        self.use_obstacbles = False
+        self.use_obstacbles = True
         self.render_mode = render_mode
         self.robot_count = robot_count
         self.world_name = world_name
@@ -415,7 +415,7 @@ class Nav2ParallelEnv(ParallelEnv, Node):
         self._delete_all_models()
         if self.use_obstacbles:
             self._delete_all_obstacles()
-        time.sleep(1.0)
+        time.sleep(1.2)
         self.get_logger().info('再スポーン中...')
         self._spawn_all_models()
         if self.use_obstacbles:
@@ -546,32 +546,13 @@ class Nav2ParallelEnv(ParallelEnv, Node):
         """
         全エージェントのスポーン位置情報を更新する
         """
-        # obs
-        # for row in range(2):
-        #     for col in range(5):
-        #         id = row * 5 + col + 1
-        #         agt_id = f'robot_{id}'
-        #         x = -8.0 + col * 4.0
-        #         y = -7.0 + row * 9.0
-        #         yaw = random.uniform(-pi, pi)
-        #         self.initial_poses[agt_id] = Pose(x=x, y=y, yaw=yaw)
-    
-        # for row in range(2):
-        #     for col in range(5):
-        #         id = row * 5 + col + 1
-        #         agt_id = f'robot_{id}'
-        #         x = -8.0 + col * 4.0
-        #         y = -2.0 + row * 9.0
-        #         yaw = random.uniform(3*pi/4, pi/4)
-        #         self.goal_pose_dict[agt_id] = Pose(x=x, y=y, yaw=yaw)
-
-        # obs 交差環境
+        #obs 静的障害物環境
         if self.world_name == "obs":
             for row in range(2):
                 for col in range(5):
                     id = row * 5 + col + 1
                     agt_id = f'robot_{id}'
-                    x = -8.0 + col * 4.0
+                    x = -8.0 + col * 4.0 + random.uniform(-0.5, 0.5)
                     y = -7.0 + row * 9.0
                     yaw = random.uniform(-pi, pi)
                     self.initial_poses[agt_id] = Pose(x=x, y=y, yaw=yaw)
@@ -584,6 +565,30 @@ class Nav2ParallelEnv(ParallelEnv, Node):
                     y = -2.0 + row * 9.0
                     yaw = random.uniform(3*pi/4, pi/4)
                     self.goal_pose_dict[agt_id] = Pose(x=x, y=y, yaw=yaw)
+
+        # # obs 交差環境　
+        # if self.world_name == "obs":
+        #     for row in range(2):
+        #         for col in range(5):
+        #             id = row + col*2 + 1
+        #             agt_id = f'robot_{id}'
+        #             x = -8.0 + col * 4.0
+        #             # y = -7.0 + row * 9.0
+        #             y = -7.0 if row == 0 else -2.0
+        #             yaw = random.uniform(-pi, pi)
+        #             # yaw = pi/2 if row == 0 else -pi/2
+        #             self.initial_poses[agt_id] = Pose(x=x, y=y, yaw=yaw)
+
+        #     for row in range(2):
+        #         for col in range(5):
+        #             id = row + col*2 + 1
+        #             agt_id = f'robot_{id}'
+        #             x = -8.0 + col * 4.0
+        #             # y = -2.0 + row * 9.0
+        #             y = -2.0 if row == 0 else -7.0
+        #             yaw = random.uniform(3*pi/4, pi/4)
+        #             # yaw = pi/2 if row == 0 else -pi/2
+        #             self.goal_pose_dict[agt_id] = Pose(x=x, y=y, yaw=yaw)
 
         if self.world_name == "follow_path":
             # follow_path 環境
@@ -607,7 +612,6 @@ class Nav2ParallelEnv(ParallelEnv, Node):
                     yaw = random.uniform(3*pi/4, pi/4)
                     self.goal_pose_dict[agt_id] = Pose(x=x, y=y, yaw=yaw)
             return
-
 
     def _update_all_obstacles_pose(self):
         """

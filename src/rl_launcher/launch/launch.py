@@ -67,6 +67,9 @@ def launch_setup(context, *args, **kwargs):
     if rebuild_world.lower() == 'true':
         actions.append(world_create_proc)
 
+
+
+
     # tb4_launcherのmulti_launch.pyを呼び出し
     tb4_launcher_path = os.path.join(get_package_share_directory('tb4_launcher'), 'launch', 'multi_launch.py')
     nav2_launcher = IncludeLaunchDescription(
