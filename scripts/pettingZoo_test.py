@@ -9,6 +9,10 @@ from future_extractor import Nav2CombinedExtractor
 import rclpy
 import threading
 import matplotlib.pyplot as plt
+
+import matplotlib
+matplotlib.use('Agg')
+
 import numpy as np
 import math
 import argparse
@@ -136,7 +140,8 @@ if __name__ == "__main__":
                     )
                     
             try:
-                model.load_replay_buffer(f"{args.load_model}")
+                if args.eval:
+                    model.load_replay_buffer(f"{args.load_model}")
                 print("✓ リプレイバッファをロードしました")
             except Exception as e:
                 print(f"Warning: Failed to load replay buffer: {e}")
@@ -164,7 +169,7 @@ if __name__ == "__main__":
                         exploration_initial_eps=1.0,
                         exploration_final_eps=0.05,
                         verbose=1,
-                        tensorboard_log=f"./logs/{model_path}_tensorboard/"
+                        tensorboard_log=None#f"./logs/{model_path}_tensorboard/"
                     )
                 case 'SAC':
                     model = alg_class(
@@ -181,7 +186,7 @@ if __name__ == "__main__":
                         gradient_steps=1,
                         target_update_interval=1000,
                         verbose=1,
-                        tensorboard_log=f"./logs/{model_path}_tensorboard/"
+                        tensorboard_log=None
             )
                     
         
