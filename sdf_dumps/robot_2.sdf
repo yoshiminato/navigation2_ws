@@ -1045,5 +1045,13 @@
     <frame name='base_link' attached_to='base_footprint_joint'>
       <pose>0 0 0 0 0 0</pose>
     </frame>
+    <gazebo>
+      <plugin filename='libgazebo_ros_p3d.so' name='ground_truth'>
+        <frameName>map</frameName>
+        <bodyName>base_footprint</bodyName>
+        <topicName>robot_2/tracker</topicName>
+        <updateRate>10.0</updateRate>
+      </plugin>
+    </gazebo>
   </model>
 </sdf>

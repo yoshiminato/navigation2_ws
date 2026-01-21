@@ -250,6 +250,14 @@
       <topic>robot_1/joint_states</topic>
       <update_rate>30</update_rate>
     </plugin>
+    <gazebo>
+      <plugin filename="libgazebo_ros_p3d.so" name="ground_truth">
+        <frameName>map</frameName>
+        <bodyName>base_footprint</bodyName>
+        <topicName>robot_1/tracker</topicName>
+        <updateRate>10.0</updateRate>
+      </plugin>
+    </gazebo>
     <!-- <plugin
         filename="gz-sim-odometry-publisher-system"
         name="gz::sim::systems::OdometryPublisher">

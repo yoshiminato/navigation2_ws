@@ -198,6 +198,7 @@ controller_server:
       # #   twirling_cost_power: 1
       # #   twirling_cost_weight: 10.0
 
+      # DWB Local Planner Parameters
       debug_trajectory_details: True
       min_vel_x: -0.35
       min_vel_y: 0.0

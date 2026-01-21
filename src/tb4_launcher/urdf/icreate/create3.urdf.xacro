@@ -151,6 +151,16 @@
         <update_rate>30</update_rate>
       </plugin>
 
+        <gazebo>
+          <plugin name="ground_truth" filename="libgazebo_ros_p3d.so">
+            <frameName>map</frameName>
+            <bodyName>base_footprint</bodyName>
+            <topicName>$(arg namespace)/tracker</topicName>
+            <updateRate>10.0</updateRate>
+          </plugin>
+        </gazebo>
+
+
       <!-- <plugin
         filename="gz-sim-odometry-publisher-system"
         name="gz::sim::systems::OdometryPublisher">

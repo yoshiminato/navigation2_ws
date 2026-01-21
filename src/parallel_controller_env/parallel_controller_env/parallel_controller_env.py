@@ -67,7 +67,7 @@ from rclpy.parameter import Parameter
 
 
 """タイムアウト時間"""
-SIMULATION_TIMEOUT = 80  # [秒] エピソードの最大実行時間
+SIMULATION_TIMEOUT = 1000  # [秒] エピソードの最大実行時間
 SPAWN_TIMEOUT = 10       # [秒] スポーンの最大待機時間
 
 CONTACT_DETECTION_START_DELAY = 0.4
@@ -173,7 +173,7 @@ class Nav2ParallelEnv(ParallelEnv, Node):
     def __init__(self, robot_count=2, world_name="square15", use_rl=False, action_type="continuous", render_mode=None):
         Node.__init__(self, 'nav2_parallel_env')
 
-        self.use_obstacbles = False
+        self.use_obstacbles = True
         self.render_mode = render_mode
         self.robot_count = robot_count
         self.world_name = world_name
@@ -194,7 +194,7 @@ class Nav2ParallelEnv(ParallelEnv, Node):
         self.log_path, self.error_log_path = get_unique_log_file_path()
 
         self.initial_poses = {}
-        self.goal_pose_dict = {}
+        self.goal_poses = {}
         self._update_all_agents_pose()
         
 
@@ -374,9 +374,6 @@ class Nav2ParallelEnv(ParallelEnv, Node):
                 "gmap_client"    : global_costmap_clear_client,
             }
             
-        self.get_logger().info(f'{self.initial_poses}')
-        self.get_logger().info(f'{self.initial_poses.keys()}')
-
         self.get_logger().info('スポーン中...')
         self._spawn_all_models()
 
@@ -550,24 +547,24 @@ class Nav2ParallelEnv(ParallelEnv, Node):
         全エージェントのスポーン位置情報を更新する
         """
         #obs 静的障害物環境
-        if self.world_name == "obs":
-            for row in range(2):
-                for col in range(5):
-                    id = row * 5 + col + 1
-                    agt_id = f'robot_{id}'
-                    x = -8.0 + col * 4.0 + random.uniform(-0.5, 0.5)
-                    y = -7.0 + row * 9.0
-                    yaw = random.uniform(-pi, pi)
-                    self.initial_poses[agt_id] = Pose(x=x, y=y, yaw=yaw)
+        # if self.world_name == "obs":
+        #     for row in range(2):
+        #         for col in range(5):
+        #             id = row * 5 + col + 1
+        #             agt_id = f'robot_{id}'
+        #             x = -8.0 + col * 4.0 + random.uniform(-0.5, 0.5)
+        #             y = -7.0 + row * 9.0
+        #             yaw = random.uniform(-pi, pi)
+        #             self.initial_poses[agt_id] = Pose(x=x, y=y, yaw=yaw)
 
-            for row in range(2):
-                for col in range(5):
-                    id = row * 5 + col + 1
-                    agt_id = f'robot_{id}'
-                    x = -8.0 + col * 4.0
-                    y = -2.0 + row * 9.0
-                    yaw = random.uniform(3*pi/4, pi/4)
-                    self.goal_pose_dict[agt_id] = Pose(x=x, y=y, yaw=yaw)
+        #     for row in range(2):
+        #         for col in range(5):
+        #             id = row * 5 + col + 1
+        #             agt_id = f'robot_{id}'
+        #             x = -8.0 + col * 4.0
+        #             y = -2.0 + row * 9.0
+        #             yaw = random.uniform(3*pi/4, pi/4)
+        #             self.goal_poses[agt_id] = Pose(x=x, y=y, yaw=yaw)
 
         # obs 交差環境　
         if self.world_name == "obs":
@@ -591,7 +588,7 @@ class Nav2ParallelEnv(ParallelEnv, Node):
                     y = -2.0 if row == 0 else -7.0
                     yaw = random.uniform(3*pi/4, pi/4)
                     # yaw = pi/2 if row == 0 else -pi/2
-                    self.goal_pose_dict[agt_id] = Pose(x=x, y=y, yaw=yaw)
+                    self.goal_poses[agt_id] = Pose(x=x, y=y, yaw=yaw)
 
         if self.world_name == "temp":
             for i in range(self.robot_count):
@@ -611,8 +608,30 @@ class Nav2ParallelEnv(ParallelEnv, Node):
                 x = r * math.cos(theta)
                 y = r * math.sin(theta)
                 yaw = random.uniform(-pi, pi)
-                self.goal_pose_dict[agt_id] = Pose(x=x, y=y, yaw=yaw)
+                self.goal_poses[agt_id] = Pose(x=x, y=y, yaw=yaw)
+        
+
+        if self.world_name == "f1":
+            # シンプル環境
+            self.get_logger().info('f1環境の位置設定を実行中...')
+            for row in range(2):
+                for col in range(5):
+                    id = row + col*2 + 1
+                    agt_id = f'robot_{id}'
+                    x = -4.0 + col * 2.0
+                    y = -7.0 if row == 0 else -2.0
+                    yaw = random.uniform(-pi, pi)
+                    self.initial_poses[agt_id] = Pose(x=x, y=y, yaw=yaw)
             
+            for row in range(2):
+                for col in range(5):
+                    id = row + col*2 + 1
+                    agt_id = f'robot_{id}'
+                    x = -4.0 + col * 2.0
+                    y = -2.0 if row == 0 else -7.0
+                    yaw = random.uniform(-pi, pi)
+                    self.goal_poses[agt_id] = Pose(x=x, y=y, yaw=yaw)
+
 
         if self.world_name == "follow_path":
             # follow_path 環境
@@ -634,11 +653,92 @@ class Nav2ParallelEnv(ParallelEnv, Node):
                     x = -6.0 + col * 3.0
                     y = -2.0 if row == 0 else -7.0
                     yaw = random.uniform(3*pi/4, pi/4)
-                    self.goal_pose_dict[agt_id] = Pose(x=x, y=y, yaw=yaw)
-            return
+                    self.goal_poses[agt_id] = Pose(x=x, y=y, yaw=yaw)
+
+
+        task_type = "0" # "0":対面通行 "1":単体環境
+
+
+        if self.world_name == "test1":
+
+            if task_type == "0":
+
+
+                x, y, yaw= random.uniform(-6.0, -5.0), random.uniform(-9.0, -8.0), random.uniform(-pi, pi)
+                self.initial_poses['robot_1'] = Pose(x=x, y=y, yaw=yaw)
+
+                x, y, yaw= random.uniform(-3.0, -2.0), random.uniform(-3.0, -2.0), random.uniform(-pi, pi)
+                self.initial_poses['robot_2'] = Pose(x=x, y=y, yaw=yaw)
+
+                x, y = -2.5, -2.5
+                self.goal_poses['robot_1'] = Pose(x=x, y=y, yaw=pi/2)
+
+                x, y = -5.5, -8.5
+                self.goal_poses['robot_2'] = Pose(x=x, y=y, yaw=-pi/2)
+
+                x, y, yaw = random.uniform(2.0, 3.0), random.uniform(-9.0, -8.0), random.uniform(-pi, pi)
+                self.initial_poses['robot_3'] = Pose(x=x, y=y, yaw=yaw)
+
+                x, y, yaw = random.uniform(5.0, 6.0), random.uniform(-3.0, -2.0), random.uniform(-pi, pi)
+                self.initial_poses['robot_4'] = Pose(x=x, y=y, yaw=yaw)
+
+                x, y = 5.5, -2.5
+                self.goal_poses['robot_3'] = Pose(x=x, y=y, yaw=pi/2)
+
+                x, y = 2.5, -8.5
+                self.goal_poses['robot_4'] = Pose(x=x, y=y, yaw=-pi/2)
+
+                x, y, yaw = random.uniform(-6.0, -5.0), random.uniform(2.0, 3.0), random.uniform(-pi, pi)
+                self.initial_poses['robot_5'] = Pose(x=x, y=y, yaw=yaw)
+
+                x, y, yaw = random.uniform(-3.0, -2.0), random.uniform(8.0, 9.0), random.uniform(-pi, pi)
+                self.initial_poses['robot_6'] = Pose(x=x, y=y, yaw=yaw)
+
+                x, y = -2.5, 8.5
+                self.goal_poses['robot_5'] = Pose(x=x, y=y, yaw=pi/2)
+
+                x, y = -5.5, 2.5
+                self.goal_poses['robot_6'] = Pose(x=x, y=y, yaw=-pi/2)
+
+                x, y, yaw = random.uniform(2.0, 3.0), random.uniform(2.0, 3.0), random.uniform(-pi, pi)
+                self.initial_poses['robot_7'] = Pose(x=x, y=y, yaw=yaw)
+
+                x, y, yaw = random.uniform(5.0, 6.0), random.uniform(8.0, 9.0), random.uniform(-pi, pi)
+                self.initial_poses['robot_8'] = Pose(x=x, y=y, yaw=yaw)
+
+                x, y = 5.5, 8.5
+                self.goal_poses['robot_7'] = Pose(x=x, y=y, yaw=pi/2)
+
+                x, y = 2.5, 2.5
+                self.goal_poses['robot_8'] = Pose(x=x, y=y, yaw=-pi/2)
+
+            elif task_type == "1":
+                x, y, yaw = random.uniform(-6.0, -5.0), random.uniform(-9.0, -8.0), random.uniform(-pi, pi)
+                self.initial_poses['robot_1'] = Pose(x=x, y=y, yaw=yaw)
+
+                x, y = -2.5, -2.5
+                self.goal_poses['robot_1'] = Pose(x=x, y=y, yaw=pi/2)
+
+                x, y, yaw = random.uniform(2.0, 3.0), random.uniform(-9.0, -8.0), random.uniform(-pi, pi)
+                self.initial_poses['robot_2'] = Pose(x=x, y=y, yaw=yaw)
+
+                x, y = 5.5, -2.5
+                self.goal_poses['robot_2'] = Pose(x=x, y=y, yaw=pi/2)
+
+                x, y, yaw = random.uniform(-6.0, -5.0), random.uniform(2.0, 3.0), random.uniform(-pi, pi)
+                self.initial_poses['robot_3'] = Pose(x=x, y=y, yaw=yaw)
+
+                x, y = -2.5, 8.5
+                self.goal_poses['robot_3'] = Pose(x=x, y=y, yaw=pi/2)
+
+                x, y = random.uniform(2.0, 3.0), random.uniform(2.0, 3.0)
+                self.initial_poses['robot_4'] = Pose(x=x, y=y, yaw=yaw)
+
+                x, y = 5.5, 8.5
+                self.goal_poses['robot_4'] = Pose(x=x, y=y, yaw=pi/2)
+
+        return
         
-
-
     def _update_all_obstacles_pose(self):
         """
         障害物の位置情報を更新する
@@ -662,6 +762,18 @@ class Nav2ParallelEnv(ParallelEnv, Node):
                     z = 0.5
                     yaw = random.uniform(-pi, pi)
                     self.obstacle_poses[agt_id] = Pose(x=x, y=y, z=z, yaw=yaw)
+
+        if self.world_name == "test1":
+            for row in range(2):
+                for col in range(2):
+                    id = (row * 2 + col)*3
+                    x, y = -5.5+col*8.0, -6.5+row*11.0
+                    self.obstacle_poses[f'obstacle_{id+1}'] = Pose(x=x, y=y, z=0.5, yaw=0.0)
+                    x, y = -4.5+col*8.0, -4.5+row*11.0
+                    self.obstacle_poses[f'obstacle_{id+2}'] = Pose(x=x, y=y, z=0.5, yaw=0.0)
+                    x, y = -2.5+col*8.0, -5.5+row*11.0
+                    self.obstacle_poses[f'obstacle_{id+3}'] = Pose(x=x, y=y, z=0.5, yaw=0.0)
+                
 
         if self.world_name == "temp":
             for i in range(self.obs_count):
@@ -695,7 +807,6 @@ class Nav2ParallelEnv(ParallelEnv, Node):
                 return False
             
         return True
-
 
     def _clear_all_agents_global_costmap(self):
         for agt_id in self.agents:
@@ -945,6 +1056,7 @@ class Nav2ParallelEnv(ParallelEnv, Node):
         """AMCL位置推定のコールバック: 初回受信時にdone_estimationをTrueにする"""
 
         # self.get_logger().info(f'[{agt_id}] AMCL pose コールバック受信')
+        # self.get_logger().info(f'[{agt_id}] AMCL pose: {msg.pose.pose}')
 
         if self.done_estimation.get(agt_id, False):
             return
@@ -1804,7 +1916,7 @@ class Nav2ParallelEnv(ParallelEnv, Node):
 
         # 全ロボットのゴールを送信
         for agt_id in self.agents:
-            g_pose = self.goal_pose_dict[agt_id]
+            g_pose = self.goal_poses[agt_id]
             self._send_nav_goal_action(agt_id, g_pose.x, g_pose.y, g_pose.yaw)
         
         return True
@@ -1916,7 +2028,6 @@ class Nav2ParallelEnv(ParallelEnv, Node):
         """
         全障害物を順番にスポーン
         """
-
         for obs_id, pose in self.obstacle_poses.items():
             model_name = obs_id
             obs_size = {'x': 0.5, 'y': 0.5, 'z': 1.0} 
