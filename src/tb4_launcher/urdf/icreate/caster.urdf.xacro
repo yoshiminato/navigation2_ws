@@ -13,13 +13,16 @@
     <xacro:insert_block name="origin"/>
   </joint>
   <link name="${name}_link">
-    <visual>
+    
+    
+    <!-- <visual>
       <geometry>
         <sphere radius="${radius}"/>
       </geometry>
-      <!-- Give black color to caster in Rviz -->
       <xacro:insert_block name="material_black"/>
-    </visual>
+    </visual> -->
+
+
     <collision>
       <geometry>
         <sphere radius="${radius}"/>
@@ -38,7 +41,7 @@
   </gazebo>
 
   <gazebo reference="${name}_link">
-    <material>Gazebo/DarkGrey</material>
+    <xacro:material_darkgray/>
     <mu1>0.1</mu1>
     <mu2>0.1</mu2>
     <kp>1000000.0</kp>

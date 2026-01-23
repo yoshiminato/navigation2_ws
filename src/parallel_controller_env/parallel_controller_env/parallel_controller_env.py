@@ -67,7 +67,7 @@ from rclpy.parameter import Parameter
 
 
 """タイムアウト時間"""
-SIMULATION_TIMEOUT = 1000  # [秒] エピソードの最大実行時間
+SIMULATION_TIMEOUT = 100  # [秒] エピソードの最大実行時間
 SPAWN_TIMEOUT = 10       # [秒] スポーンの最大待機時間
 
 CONTACT_DETECTION_START_DELAY = 0.4
@@ -83,10 +83,10 @@ YAW_TOLERANCE = 0.002      # [rad] ゴール到達判定用のAMCL姿勢誤差�
 
 
 """報酬"""
-REWARD_COLLISION           = -200.0   # 衝突時のペナルティ
-REWARD_GOAL                =  200.0   # ゴール到達時の報酬
+REWARD_COLLISION           = -500.0   # 衝突時のペナルティ
+REWARD_GOAL                =  500.0   # ゴール到達時の報酬
 REWARD_STEP                =  -0.2       # ステップ毎のペナルティ(時間経過ペナルティ)
-REWARD_SUBGOAL_COEF        =  40.0     # サブゴール距離差分報酬係数(自律移動の総経路帳に応じて修正スべき？)
+REWARD_SUBGOAL_COEF        =  30.0     # サブゴール距離差分報酬係数(自律移動の総経路帳に応じて修正スべき？)
 REWARD_HIGH_SPEED_COEF     =  0.0    # 高速移動報酬係数
 REWARD_BACKWARD            =  -0.1     # 後退ペナルティ
 
@@ -737,6 +737,53 @@ class Nav2ParallelEnv(ParallelEnv, Node):
                 x, y = 5.5, 8.5
                 self.goal_poses['robot_4'] = Pose(x=x, y=y, yaw=pi/2)
 
+        if self.world_name == "train1":
+            for i in range(2):
+                id = 4*i + 1
+                x_offset = -7 if i == 0 else 7
+                agt_id = f'robot_{id}'
+                x = random.uniform(-2.0, 2.0) + x_offset
+                y = random.uniform(4.0, 5.0)
+                yaw = np.random.uniform(-pi, pi)
+                self.initial_poses[agt_id] = Pose(x=x, y=y, yaw=yaw)
+                x = random.uniform(-2.0, 2.0) + x_offset
+                y = random.uniform(-4.0, -5.0)
+                yaw = np.random.uniform(-pi, pi)
+                self.goal_poses[agt_id] = Pose(x=x, y=y, yaw=yaw)
+                
+                id = id + 1
+                agt_id = f'robot_{id}'
+                x = random.uniform(-2.0, 2.0) + x_offset
+                y = random.uniform(-4.0, -5.0)
+                yaw = np.random.uniform(-pi, pi)
+                self.initial_poses[agt_id] = Pose(x=x, y=y, yaw=yaw)
+                x = random.uniform(-2.0, 2.0) + x_offset
+                y = random.uniform(4.0, 5.0)
+                yaw = np.random.uniform(-pi, pi)
+                self.goal_poses[agt_id] = Pose(x=x, y=y, yaw=yaw)
+
+                id = id + 1
+                agt_id = f'robot_{id}'
+                x = random.uniform(-4.0, -5.0) + x_offset
+                y = random.uniform(-2.0, 2.0)
+                yaw = np.random.uniform(-pi, pi)
+                self.initial_poses[agt_id] = Pose(x=x, y=y, yaw=yaw)
+                x = random.uniform(4.0, 5.0) + x_offset
+                y = random.uniform(-2.0, 2.0)
+                yaw = np.random.uniform(-pi, pi)
+                self.goal_poses[agt_id] = Pose(x=x, y=y, yaw=yaw)
+
+                id = id + 1
+                agt_id = f'robot_{id}'
+                x = random.uniform(4.0, 5.0) + x_offset
+                y = random.uniform(-2.0, 2.0)
+                yaw = np.random.uniform(-pi, pi)
+                self.initial_poses[agt_id] = Pose(x=x, y=y, yaw=yaw)
+                x = random.uniform(-4.0, -5.0) + x_offset
+                y = random.uniform(-2.0, 2.0)
+                yaw = np.random.uniform(-pi, pi)
+                self.goal_poses[agt_id] = Pose(x=x, y=y, yaw=yaw)
+
         return
         
     def _update_all_obstacles_pose(self):
@@ -773,7 +820,37 @@ class Nav2ParallelEnv(ParallelEnv, Node):
                     self.obstacle_poses[f'obstacle_{id+2}'] = Pose(x=x, y=y, z=0.5, yaw=0.0)
                     x, y = -2.5+col*8.0, -5.5+row*11.0
                     self.obstacle_poses[f'obstacle_{id+3}'] = Pose(x=x, y=y, z=0.5, yaw=0.0)
-                
+
+        if self.world_name == "train1":
+            for i in range(2):
+                x_offset = -7 if i == 0 else 7
+                for j in range(4):
+                    id = i * 4 + j + 1
+                    r = 3
+                    theta = j * (2 * pi / 4)
+                    x = math.cos(theta) * r + x_offset
+                    y = math.sin(theta) * r
+                    z = 0.5
+                    yaw = random.uniform(-pi, pi)
+                    self.obstacle_poses[f'obstacle_{id}'] = Pose(x=x, y=y, z=z, yaw=yaw)
+
+                count = 0
+                obs_num_in_circle = 3
+                while count < obs_num_in_circle:
+                    x = random.uniform(-2.0, 2.0) 
+                    y = random.uniform(-2.0, 2.0)
+                    if x**2 + y**2 > 2.0**2:
+                        continue
+                    x += x_offset
+                    z = 0.5
+                    yaw = 0
+                    if not self._is_safe_pose(x, y, self.obstacle_poses):
+                        continue
+                    
+                    count += 1
+                    self.obstacle_poses[f'obstacle_{8 + i*obs_num_in_circle + count}'] = Pose(x=x, y=y, z=z, yaw=yaw)
+
+               
 
         if self.world_name == "temp":
             for i in range(self.obs_count):
@@ -784,7 +861,7 @@ class Nav2ParallelEnv(ParallelEnv, Node):
                 y = r * math.sin(theta)
                 z = 0.5
                 yaw = random.uniform(-pi, pi)
-                while not self._is_safe_pose(x, y, self.obstacle_poses, i):
+                while not self._is_safe_pose(x, y, self.obstacle_poses):
                     r = random.uniform(1.0, 3.0)
                     theta = random.uniform(-pi, pi)
                     x = r * math.cos(theta)
@@ -793,17 +870,15 @@ class Nav2ParallelEnv(ParallelEnv, Node):
                         break
                 self.obstacle_poses[obs_id] = Pose(x=x, y=y, z=z, yaw=yaw)
     
-    def _is_safe_pose(self, x, y, poses: dict, count: int) -> bool:
+    def _is_safe_pose(self, x, y, poses: dict) -> bool:
         """
         指定した位置が安全かどうかを判定する
         """
-        for i in range(0, count):
-            id = i + 1
-            obs_id = f'obstacle_{id}'
-            x_ = poses[obs_id].x
-            y_ = poses[obs_id].y
+        for pose in poses.values():
+            x_ = pose.x
+            y_ = pose.y
             dist = math.sqrt((x - x_)**2 + (y - y_)**2)
-            if dist < 0.8:
+            if dist < 1.0:
                 return False
             
         return True
@@ -1986,7 +2061,7 @@ class Nav2ParallelEnv(ParallelEnv, Node):
             self.get_logger().error(f"サービスコールエラー ({name}): {e}")
             return False
 
-    def _spawn_obstacle(self, model_name: str, obs_size: dict, pose: Pose):
+    def _spawn_obstacle(self, model_name: str, radius: float, pose: Pose):
         """
         障害物をスポーン
         
@@ -2012,10 +2087,21 @@ class Nav2ParallelEnv(ParallelEnv, Node):
     <static>true</static>
     <link name="{model_name}_link">
       <collision name="{model_name}_collision">
-        <geometry><box><size>{obs_size['x']} {obs_size['y']} {obs_size['z']}</size></box></geometry>
+        <geometry>
+          <cylinder>
+            <!-- 半径は x (直径) の半分、長さは z (高さ) とする例 -->
+            <radius>{radius}</radius>
+            <length>1</length>
+          </cylinder>
+        </geometry>
       </collision>
       <visual name="{model_name}_visual">
-        <geometry><box><size>{obs_size['x']} {obs_size['y']} {obs_size['z']}</size></box></geometry>
+        <geometry>
+          <cylinder>
+            <radius>{radius}</radius>
+            <length>1</length>
+          </cylinder>
+        </geometry>
         <material><ambient>1 0 0 1</ambient></material>
       </visual>
     </link>
@@ -2031,7 +2117,8 @@ class Nav2ParallelEnv(ParallelEnv, Node):
         for obs_id, pose in self.obstacle_poses.items():
             model_name = obs_id
             obs_size = {'x': 0.5, 'y': 0.5, 'z': 1.0} 
-            success = self._spawn_obstacle(model_name, obs_size, pose)
+            radius = 0.5
+            success = self._spawn_obstacle(model_name, radius, pose)
             if not success:
                 self.get_logger().error(f"致命的エラー: {model_name} のスポーンを諦めました")
             time.sleep(0.1)

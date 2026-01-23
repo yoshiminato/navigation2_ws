@@ -155,22 +155,6 @@
           </friction>
         </surface>
       </collision>
-      <visual name='front_caster_link_visual'>
-        <pose>0 0 0 0 0 0</pose>
-        <geometry>
-          <sphere>
-            <radius>0.01</radius>
-          </sphere>
-        </geometry>
-        <material>
-          <script>
-            <name>Gazebo/DarkGrey</name>
-            <uri>file://media/materials/scripts/gazebo.material</uri>
-          </script>
-          <diffuse>0.125 0.125 0.125 1</diffuse>
-          <ambient>0.125 0.125 0.125 1</ambient>
-        </material>
-      </visual>
     </link>
     <joint name='front_left_bottom_weight_block_joint' type='fixed'>
       <pose relative_to='base_footprint'>0.060052670000000002 0.087588410000000005 0.097885460000000007 0 0 0</pose>
@@ -448,12 +432,9 @@
           </cylinder>
         </geometry>
         <material>
-          <script>
-            <name>Gazebo/DarkGrey</name>
-            <uri>file://media/materials/scripts/gazebo.material</uri>
-          </script>
-          <diffuse>0.125 0.125 0.125 1</diffuse>
-          <ambient>0.125 0.125 0.125 1</ambient>
+          <diffuse>0.0117647061 0.0117647061 0.0117647061 1</diffuse>
+          <specular>0 0 0 1</specular>
+          <emissive>0 0 0 1</emissive>
         </material>
       </visual>
     </link>
@@ -521,12 +502,9 @@
           </cylinder>
         </geometry>
         <material>
-          <script>
-            <name>Gazebo/DarkGrey</name>
-            <uri>file://media/materials/scripts/gazebo.material</uri>
-          </script>
-          <diffuse>0.125 0.125 0.125 1</diffuse>
-          <ambient>0.125 0.125 0.125 1</ambient>
+          <diffuse>0.0117647061 0.0117647061 0.0117647061 1</diffuse>
+          <specular>0 0 0 1</specular>
+          <emissive>0 0 0 1</emissive>
         </material>
       </visual>
     </link>

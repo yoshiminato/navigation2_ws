@@ -90,7 +90,7 @@
 
   <!-- Material colors -->
   <xacro:property name="material_black">
-    <material name="black">
+    <material name="icreate_black">
       <color rgba="0.1 0.1 0.1 1"/>
     </material>
   </xacro:property>

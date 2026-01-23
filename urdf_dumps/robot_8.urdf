@@ -107,7 +107,7 @@
         <cylinder length="0.015" radius="0.035750000000000004"/>
       </geometry>
       <!-- Give black color to wheels in Rviz -->
-      <material name="black">
+      <material name="icreate_black">
         <color rgba="0.1 0.1 0.1 1"/>
       </material>
     </visual>
@@ -134,7 +134,13 @@
     <kd>100.0</kd>
     <minDepth>0.0001</minDepth>
     <maxVel>1.0</maxVel>
-    <material>Gazebo/DarkGrey</material>
+    <visual>
+      <material>
+        <diffuse>0.011764705882352941 0.011764705882352941 0.011764705882352941 1</diffuse>
+        <specular>0 0 0 1</specular>
+        <emissive>0 0 0 1</emissive>
+      </material>
+    </visual>
   </gazebo>
   <joint name="right_wheel_joint" type="continuous">
     <parent link="base_link"/>
@@ -148,7 +154,7 @@
         <cylinder length="0.015" radius="0.035750000000000004"/>
       </geometry>
       <!-- Give black color to wheels in Rviz -->
-      <material name="black">
+      <material name="icreate_black">
         <color rgba="0.1 0.1 0.1 1"/>
       </material>
     </visual>
@@ -175,7 +181,13 @@
     <kd>100.0</kd>
     <minDepth>0.0001</minDepth>
     <maxVel>1.0</maxVel>
-    <material>Gazebo/DarkGrey</material>
+    <visual>
+      <material>
+        <diffuse>0.011764705882352941 0.011764705882352941 0.011764705882352941 1</diffuse>
+        <specular>0 0 0 1</specular>
+        <emissive>0 0 0 1</emissive>
+      </material>
+    </visual>
   </gazebo>
   <joint name="front_caster_joint" type="fixed">
     <parent link="base_link"/>
@@ -183,15 +195,12 @@
     <origin rpy="-1.5707963267948966 0 0" xyz="0.125 0 0.013900000000000003"/>
   </joint>
   <link name="front_caster_link">
-    <visual>
+    <!-- <visual>
       <geometry>
-        <sphere radius="0.01"/>
+        <sphere radius="${radius}"/>
       </geometry>
-      <!-- Give black color to caster in Rviz -->
-      <material name="black">
-        <color rgba="0.1 0.1 0.1 1"/>
-      </material>
-    </visual>
+      <xacro:insert_block name="material_black"/>
+    </visual> -->
     <collision>
       <geometry>
         <sphere radius="0.01"/>
@@ -211,7 +220,13 @@
     <preserveFixedJoint>true</preserveFixedJoint>
   </gazebo>
   <gazebo reference="front_caster_link">
-    <material>Gazebo/DarkGrey</material>
+    <visual>
+      <material>
+        <diffuse>0.011764705882352941 0.011764705882352941 0.011764705882352941 1</diffuse>
+        <specular>0 0 0 1</specular>
+        <emissive>0 0 0 1</emissive>
+      </material>
+    </visual>
     <mu1>0.1</mu1>
     <mu2>0.1</mu2>
     <kp>1000000.0</kp>
@@ -250,36 +265,16 @@
       <topic>robot_8/joint_states</topic>
       <update_rate>30</update_rate>
     </plugin>
-    <!-- <plugin
-        filename="gz-sim-odometry-publisher-system"
-        name="gz::sim::systems::OdometryPublisher">
-        <dimensions>3</dimensions>
-        <odom_frame>map</odom_frame>
-        <robot_base_frame>base_footprint</robot_base_frame>
-        <publish_tf>true</publish_tf>
-        <update_rate>50</update_rate>
-      </plugin> -->
-    <!-- <plugin name="ground_truth_p3d" filename="libgazebo_ros_p3d.so">
-        <ros>
-          <remapping>/tf:=$(arg namespace)/tf</remapping>
-          <remapping>/tf_static:=$(arg namespace)/tf_static</remapping>
-        </ros>
-        <tf_topic>$(arg namespace)/tf</tf_topic>
-        <body_name>${frame_prefix}base_footprint</body_name>
-        <frame_name>${frame_prefix}odom</frame_name>
-        <update_rate>50.0</update_rate>
-        <xyz_offset>0 0 0</xyz_offset>
-        <rpy_offset>0 0 0</rpy_offset>
-        <gaussian_noise>0.0</gaussian_noise>
-      </plugin> -->
-    <!-- <plugin
-        filename="gz-sim-odometry-publisher-system"
-        name="gz::sim::systems::OdometryPublisher">
-        <dimensions>3</dimensions>
-        <tf_topic>$(arg namespace)/tf</tf_topic>
-        <odom_frame>${frame_prefix}odom</odom_frame>
-        <robot_base_frame>${frame_prefix}base_footprint</robot_base_frame>
-        <publish_tf>true</publish_tf>
+    <!-- <plugin filename="gz-sim-pose-publisher-system" name="gz::sim::systems::PosePublisher">
+        <publish_link_pose>false</publish_link_pose>
+        <publish_sensor_pose>false</publish_sensor_pose>
+        <publish_collision_pose>false</publish_collision_pose>
+        <publish_visual_pose>false</publish_visual_pose>
+        <publish_nested_model_pose>false</publish_nested_model_pose>
+        <publish_model_pose>true</publish_model_pose>
+        <use_pose_vector_msg>true</use_pose_vector_msg>
+        <static_publisher>true</static_publisher>
+        <static_update_frequency>1</static_update_frequency>
       </plugin> -->
   </gazebo>
   <!-- Add a base footprint definition - must be defined before being used as parent -->
