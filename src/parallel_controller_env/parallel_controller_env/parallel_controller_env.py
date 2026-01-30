@@ -82,17 +82,29 @@ POSITION_TOLERANCE = 0.005  # [m] ゴール到達判定用のAMCL位置誤差許
 YAW_TOLERANCE = 0.002      # [rad] ゴール到達判定用のAMCL姿勢誤差許容値
 
 
+# """報酬"""
+# REWARD_COLLISION           = -500.0   # 衝突時のペナルティ
+# REWARD_GOAL                =  500.0   # ゴール到達時の報酬
+# REWARD_STEP                =  -0.2       # ステップ毎のペナルティ(時間経過ペナルティ)
+# REWARD_SUBGOAL_COEF        =  40.0     # サブゴール距離差分報酬係数(自律移動の総経路帳に応じて修正スべき？)
+# REWARD_HIGH_SPEED_COEF     =  0.0    # 高速移動報酬係数
+# REWARD_BACKWARD            =  -0.1     # 後退ペナルティ
+
+# HIGH_SPEED_DOMAIN          = {'min': 0.35, 'max': 0.5}  # 高速移動とみなす速度域 [m/s]
+
+# TARGET_PLAN_POINT_IDX = 2            # 目標とするglobalPlanの点のインデックス
+
 """報酬"""
-REWARD_COLLISION           = -500.0   # 衝突時のペナルティ
-REWARD_GOAL                =  500.0   # ゴール到達時の報酬
-REWARD_STEP                =  -0.2       # ステップ毎のペナルティ(時間経過ペナルティ)
-REWARD_SUBGOAL_COEF        =  30.0     # サブゴール距離差分報酬係数(自律移動の総経路帳に応じて修正スべき？)
+REWARD_COLLISION           = -200.0   # 衝突時のペナルティ
+REWARD_GOAL                =  50.0   # ゴール到達時の報酬
+REWARD_STEP                =  -0.3       # ステップ毎のペナルティ(時間経過ペナルティ)
+REWARD_SUBGOAL_COEF        =  50.0     # サブゴール距離差分報酬係数(自律移動の総経路帳に応じて修正スべき？)
 REWARD_HIGH_SPEED_COEF     =  0.0    # 高速移動報酬係数
-REWARD_BACKWARD            =  -0.1     # 後退ペナルティ
+REWARD_BACKWARD            =  0.0     # 後退ペナルティ
 
 HIGH_SPEED_DOMAIN          = {'min': 0.35, 'max': 0.5}  # 高速移動とみなす速度域 [m/s]
 
-TARGET_PLAN_POINT_IDX = 2            # 目標とするglobalPlanの点のインデックス
+TARGET_PLAN_POINT_IDX = 5     
 
 
 MAX_LINEAR_VEL = 0.5  # 最大並進速度 [m/s]
@@ -784,6 +796,10 @@ class Nav2ParallelEnv(ParallelEnv, Node):
                 yaw = np.random.uniform(-pi, pi)
                 self.goal_poses[agt_id] = Pose(x=x, y=y, yaw=yaw)
 
+        if self.world_name == "plane":
+            self.initial_poses['robot_1'] = Pose(x=0.0, y=0.0, yaw=0.0)
+            self.goal_poses['robot_1'] = Pose(x=5.0, y=0.0, yaw=0.0)
+
         return
         
     def _update_all_obstacles_pose(self):
@@ -1280,6 +1296,7 @@ class Nav2ParallelEnv(ParallelEnv, Node):
             サブゴールへの距離変化に基づく報酬   
         """
 
+
         # エージェントの現在位置(global座標系)を取得
         tf = tfs.get(agt_id, None)
         if tf is None:
@@ -1288,6 +1305,8 @@ class Nav2ParallelEnv(ParallelEnv, Node):
 
         # サブゴール位置をglobal座標系に変換
         subgoal_in_local_frame = subgoals.get(agt_id, None)
+
+
         src_frame = f'{agt_id}/base_footprint'
         target_frame = f'{agt_id}/map'
         subgoal_pose_in_global_frame = self._transform_pose(agt_id=agt_id, pose=subgoal_in_local_frame, source_frame=src_frame, target_frame=target_frame)
@@ -1318,7 +1337,7 @@ class Nav2ParallelEnv(ParallelEnv, Node):
         
         # 前回のサブゴール位置への現在のロボットからの距離を算出
         current_dist_to_prev_subgoal = math.sqrt((prev_subgoal_pos.x - robot_pose.x)**2 + (prev_subgoal_pos.y - robot_pose.y)**2)
-        
+
         # サブゴールへの距離変化に基づく報酬計算
         dist_diff = prev_dist_to_subgoal - current_dist_to_prev_subgoal
         reward_dist_to_subgoal = REWARD_SUBGOAL_COEF * dist_diff

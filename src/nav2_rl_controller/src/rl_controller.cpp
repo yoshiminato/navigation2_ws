@@ -165,7 +165,7 @@ geometry_msgs::msg::TwistStamped RLController::computeVelocityCommands(
   transformed_plan.header.stamp = clock_->now();
 
   size_t published_points = 0;
-  const size_t max_published_points = 20;  // 最大点数を制限
+  const size_t max_published_points = 10;  // 最大点数を制限
 
   for (auto & global_pose : global_plan_up_to_inversion_.poses) {
     if (published_points >= max_published_points) 
