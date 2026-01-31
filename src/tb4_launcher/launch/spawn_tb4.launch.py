@@ -63,7 +63,7 @@ def  launch_nodes(context, *args, **kwargs):
         f'/{namespace}/joint_states@sensor_msgs/msg/JointState[gz.msgs.Model',
         f'/{namespace}/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan',
         f'/{namespace}/imu@sensor_msgs/msg/Imu[gz.msgs.IMU',
-        f'/{namespace}/pose@tf2_msgs/msg/TFMessage[gz.msgs.Pose_V',
+        f'/model/{namespace}/pose@tf2_msgs/msg/TFMessage[gz.msgs.Pose_V',
 
         # '/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock',
     ]

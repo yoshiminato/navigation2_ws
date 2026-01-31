@@ -2,6 +2,7 @@ from pettingzoo import ParallelEnv
 from gymnasium.spaces import Discrete, MultiDiscrete, Box, Tuple
 
 
+from scipy import signal
 
 from sensor_msgs.msg import Imu  # IMUメッセージ型をインポート
 import numpy as np
@@ -47,7 +48,7 @@ from rclpy.callback_groups import MutuallyExclusiveCallbackGroup, ReentrantCallb
 from action_msgs.msg import GoalStatus
 
 from geometry_msgs.msg import PoseWithCovarianceStamped, Quaternion
-from .utils import quaternion_from_yaw, quaternion_to_yaw, get_unique_log_file_path, sdf_dir, Pose
+from .utils import quaternion_from_yaw, quaternion_to_yaw, get_unique_log_file_path, sdf_dir, Pose, create_gaussian_kernel, apply_kernel_at_center
 
 import time as _time
 
@@ -67,7 +68,7 @@ from rclpy.parameter import Parameter
 
 
 """タイムアウト時間"""
-SIMULATION_TIMEOUT = 100  # [秒] エピソードの最大実行時間
+SIMULATION_TIMEOUT = 50  # [秒] エピソードの最大実行時間
 SPAWN_TIMEOUT = 10       # [秒] スポーンの最大待機時間
 
 CONTACT_DETECTION_START_DELAY = 0.4
@@ -92,15 +93,19 @@ YAW_TOLERANCE = 0.002      # [rad] ゴール到達判定用のAMCL姿勢誤差�
 
 # HIGH_SPEED_DOMAIN          = {'min': 0.35, 'max': 0.5}  # 高速移動とみなす速度域 [m/s]
 
-# TARGET_PLAN_POINT_IDX = 2            # 目標とするglobalPlanの点のインデックス
+# TARGET_PLAN_POINT_IDX = 2            # 目標とするglobalcolconPlanの点のインデックス
 
 """報酬"""
 REWARD_COLLISION           = -200.0   # 衝突時のペナルティ
 REWARD_GOAL                =  50.0   # ゴール到達時の報酬
-REWARD_STEP                =  -0.3       # ステップ毎のペナルティ(時間経過ペナルティ)
-REWARD_SUBGOAL_COEF        =  50.0     # サブゴール距離差分報酬係数(自律移動の総経路帳に応じて修正スべき？)
+REWARD_STEP                =  -0.1       # ステップ毎のペナルティ(時間経過ペナルティ)
+REWARD_SUBGOAL_COEF        =  60.0     # サブゴール距離差分報酬係数(自律移動の総経路帳に応じて修正スべき？)
 REWARD_HIGH_SPEED_COEF     =  0.0    # 高速移動報酬係数
 REWARD_BACKWARD            =  0.0     # 後退ペナルティ
+
+COSTMAP_COEF = -2.0  # コストマップ報酬係数
+
+ROBOT_RADIUS = 0.22  # ロボットの半径[m]
 
 HIGH_SPEED_DOMAIN          = {'min': 0.35, 'max': 0.5}  # 高速移動とみなす速度域 [m/s]
 
@@ -536,12 +541,14 @@ class Nav2ParallelEnv(ParallelEnv, Node):
             np.full(1, -np.inf, dtype=np.float32),            # 速度
             np.full(1, -np.inf, dtype=np.float32),            # 角速度
             np.full(1, -pi, dtype=np.float32),  # 角度誤差(yaw)
+            np.full(1, -0, dtype=np.float32),            # ゴールまでの距離
         ])
         high = np.concatenate([
             np.full(COSTMAP_SIZE*COSTMAP_SIZE*COSTMAP_BUFFER_SIZE, 255, dtype=np.float32),            # 画像: 255
             np.full(1, np.inf, dtype=np.float32),             # 速度
             np.full(1, np.inf, dtype=np.float32),             # 角速度
             np.full(1, pi, dtype=np.float32),  # 角度誤差(yaw)
+            np.full(1, np.inf, dtype=np.float32),             # ゴールまでの距離
         ])
         return Box(low=low, high=high, dtype=np.float32)
 
@@ -558,6 +565,13 @@ class Nav2ParallelEnv(ParallelEnv, Node):
         """
         全エージェントのスポーン位置情報を更新する
         """
+
+        if self.world_name == "trainAB_sample":
+            self.initial_poses["robot_1"] = Pose(x=0.0, y=-3.0, yaw=0.0)
+            self.goal_poses["robot_1"]    = Pose(x=0.0, y=3.0, yaw=0.0)
+            self.initial_poses["robot_2"] = Pose(x=0.0, y=3.0, yaw=pi/2)
+            self.goal_poses["robot_2"]    = Pose(x=0.0, y=-3.0, yaw=pi/2)
+
         #obs 静的障害物環境
         # if self.world_name == "obs":
         #     for row in range(2):
@@ -815,6 +829,10 @@ class Nav2ParallelEnv(ParallelEnv, Node):
         #         z = 0.5
         #         yaw = random.uniform(-pi, pi)
         #         self.obstacle_poses[agt_id] = Pose(x=x, y=y, z=z, yaw=yaw)
+
+        if self.world_name == "trainAB_sample":
+            self.obstacle_poses['obstacle_1'] = Pose(x=random.uniform(-0.5, 0.5), y=0.0, z=0.5, yaw=0.0)
+
         if self.world_name == "obs":
             for row in range(2):
                 for col in range(5):
@@ -865,8 +883,6 @@ class Nav2ParallelEnv(ParallelEnv, Node):
                     
                     count += 1
                     self.obstacle_poses[f'obstacle_{8 + i*obs_num_in_circle + count}'] = Pose(x=x, y=y, z=z, yaw=yaw)
-
-               
 
         if self.world_name == "temp":
             for i in range(self.obs_count):
@@ -959,8 +975,6 @@ class Nav2ParallelEnv(ParallelEnv, Node):
             tfs = self.latest_tfs.copy()
         with self.poses_lock:
             poses = self.poses.copy()
-        with self.accelerations_lock:
-            accelerations = self.accelerations.copy()
 
         observations = {}
         for agt_id in self.agents:
@@ -1003,7 +1017,13 @@ class Nav2ParallelEnv(ParallelEnv, Node):
             ang_error = np.array([ang_error], dtype=np.float32)
             ang_error = ang_error.flatten()
 
-            obs_vec = np.concatenate([costmap_buffer, vel, ang_vel, ang_error], axis=0)
+            dist_to_goal = self._get_distance_to_goal(agt_id, tf)
+            dist_to_goal = np.array([dist_to_goal], dtype=np.float32)
+            dist_to_goal = dist_to_goal.flatten()
+
+            # self.get_logger().info(f"dist_to_goal of {agt_id}: {dist_to_goal[0]:.2f}")
+
+            obs_vec = np.concatenate([costmap_buffer, vel, ang_vel, ang_error, dist_to_goal], axis=0)
 
             observations[agt_id] = obs_vec 
 
@@ -1025,6 +1045,14 @@ class Nav2ParallelEnv(ParallelEnv, Node):
                 break
 
         return target_poss
+
+    def _get_distance_to_goal(self, agt_id, tf):
+        """エージェントからゴールまでの距離を計算する"""
+        goal_pose = self.goal_poses[agt_id]
+        dx = goal_pose.x - tf.x
+        dy = goal_pose.y - tf.y
+        distance = math.sqrt(dx**2 + dy**2)
+        return distance
 
     def _update_buffer(self, agt_id, new_costmap):
         self.costmaps_buffer[agt_id].appendleft(new_costmap)
@@ -1342,6 +1370,9 @@ class Nav2ParallelEnv(ParallelEnv, Node):
         dist_diff = prev_dist_to_subgoal - current_dist_to_prev_subgoal
         reward_dist_to_subgoal = REWARD_SUBGOAL_COEF * dist_diff
 
+        # if agt_id == 'robot_1':
+        #     self.get_logger().info(f'報酬: {reward_dist_to_subgoal:.4f}')
+
         return reward_dist_to_subgoal 
 
     def _calc_reward_speed(self, speed: float) -> float:
@@ -1370,6 +1401,78 @@ class Nav2ParallelEnv(ParallelEnv, Node):
             [0.0, REWARD_HIGH_SPEED_COEF]
         )
 
+    def _calc_reward_dist_to_other_agents(self, agt_id: str, tfs: dict) -> float:
+        """
+        他エージェントとの距離に基づく報酬計算
+        
+        Parameters
+        ----------
+        agt_id : str
+            エージェントID
+        tfs : dict
+            各エージェントの現在位置姿勢を格納した辞書
+
+        Returns
+        -------
+        reward_dist_to_other_agents : float
+            他エージェントとの距離に基づく報酬   
+        """
+        reward = 0.0
+        tf = tfs.get(agt_id, None)
+        if tf is None:
+            return reward
+        pos = tf
+
+        min_dist = float('inf')
+
+        for other_agt_id in self.agents:
+            if other_agt_id == agt_id:
+                continue
+            other_tf = tfs.get(other_agt_id, None)
+            if other_tf is None:
+                continue
+            other_pos = other_tf
+            dist = math.sqrt((pos.x - other_pos.x)**2 + (pos.y - other_pos.y)**2)
+            if dist < min_dist:
+                min_dist = dist
+
+        min_dist = np.clip(min_dist-2*ROBOT_RADIUS, 0.0, float('inf'))
+
+        reward = REWARD_DIST_TO_OTHER_AGENT_COEF * math.exp(-REWARD_DIST_TO_OTHER_AGENT_EXP_COEF * min_dist)
+
+        self.get_logger().info(f'[{agt_id}] 報酬: {reward:.4f}')
+            
+        return reward
+
+    def _calc_reward_costmap(self, agt_id: str, costmaps: dict, kernel_size: int, sigma: float) -> float:
+        """
+        コストマップに基づく報酬計算
+        
+        Parameters
+        ----------
+        agt_id : str
+            エージェントID
+        costmap : np.ndarray
+            ローカルコストマップ
+
+        Returns
+        -------
+        reward_costmap : float
+            コストマップに基づく報酬   
+        """
+        reward = 0.0
+
+        costmap = costmaps.get(agt_id, None) / 255.0
+
+
+        kernel_gauss = create_gaussian_kernel(size=kernel_size, sigma=sigma)
+        reward = apply_kernel_at_center(costmap, kernel_gauss) * COSTMAP_COEF
+
+        if agt_id == 'robot_1':
+            self.get_logger().info(f'コストマップ報酬: {reward:.4f}')
+
+        return reward
+
     def _get_rewards(self, actions=None):
         """
         報酬計算用の関数(同時に学習ログの作成も行う)
@@ -1383,7 +1486,8 @@ class Nav2ParallelEnv(ParallelEnv, Node):
 
         with self.tfs_lock:
             tfs = self.latest_tfs.copy()
-
+        with self.costmaps_lock:
+            costmaps = self.costmaps.copy()
         target_poss = self._get_target_pose()
 
         # 報酬計算
@@ -1403,8 +1507,15 @@ class Nav2ParallelEnv(ParallelEnv, Node):
                 else:
                     linear_vel = self.action_data[actions[agt_id]].linear.x
                 rewards[agt_id] += self._calc_reward_speed(linear_vel)
+
                 # サブゴールへの距離変化に基づく報酬  
                 rewards[agt_id] += self._calc_reward_dist_to_subgoal(agt_id, tfs, target_poss)
+
+                # コストマップに基づく報酬
+                rewards[agt_id] += self._calc_reward_costmap(agt_id, costmaps, kernel_size=7, sigma=0.9)
+
+                # # 他エージェントとの距離に基づく報酬
+                # rewards[agt_id] += self._calc_reward_dist_to_other_agents(agt_id, tfs)
                 continue
 
             # 衝突時の報酬計算

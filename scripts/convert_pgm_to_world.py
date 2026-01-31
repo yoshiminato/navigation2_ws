@@ -67,6 +67,14 @@ world_template_list = [f"""<?xml version="1.0" ?>
       filename="gz-sim-imu-system"
       name="gz::sim::systems::Imu">
     </plugin>
+    <plugin
+      filename="gz-sim-pose-publisher-system"
+      name="gz::sim::systems::PosePublisher">
+      <publish_link_pose>true</publish_link_pose>
+      <use_pose_vector_msg>true</use_pose_vector_msg>
+      <static_publisher>true</static_publisher>
+      <static_update_frequency>1</static_update_frequency>
+    </plugin>
 
                                      
     <light name='sun' type='directional'>

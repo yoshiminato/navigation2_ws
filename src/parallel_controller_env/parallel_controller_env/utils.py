@@ -6,6 +6,8 @@ import os
 from typing import Optional
 import tf2_ros
 from rclpy.node import Node
+import numpy as np
+from scipy import signal
 
 
 def quaternion_from_yaw(yaw: float) -> Quaternion:
@@ -82,3 +84,64 @@ class Pose:
     def copy(self):
         return Pose(self.x, self.y, self.z, self.yaw)
     
+
+def create_gaussian_kernel(size, sigma):
+    """
+    size: カーネルのサイズ (奇数が推奨, 例: 3, 5, 7...)
+    sigma: 標準偏差
+    """
+    # 1次元のガウス分布を作成
+    g = signal.windows.gaussian(size, std=sigma)
+    # 2次元に拡張 (外積をとる)
+    kernel = np.outer(g, g)
+    # 合計が1になるように正規化 (任意ですが、画像処理等では一般的)
+    kernel /= kernel.sum()
+    return kernel
+# # 畳み込み演算
+# def convolution2d(img, kernel):
+#     m, n = kernel.shape # カーネルサイズ取得
+#     # カーネル中心からみた幅
+#     dy = int((m-1)/2)  # カーネル上下幅
+#     dx = int((n-1)/2)  # カーネル左右幅
+#     h, w = img.shape   # イメージサイズ
+#     out = np.zeros((h, w)) # 出力用イメージ
+#     # 畳み込み
+#     for y in range(dy, h - dy):
+#         for x in range(dx, w - dx):
+#             out[y][x] = np.sum(img[y-dy:y+dy+1, x-dx:x+dx+1]*kernel)
+#     return out
+def apply_kernel_at_center(img, kernel):
+    """
+    入力画像の中心画素に対して、カーネルを用いた積和演算（畳み込みの1ステップ）を行う関数。
+    
+    Args:
+        img (np.ndarray): 入力画像 (2次元配列)
+        kernel (np.ndarray): フィルタ/カーネル (2次元配列, 奇数サイズ推奨)
+        
+    Returns:
+        float: 積和演算の結果（スカラー値）
+    """
+    # カーネルサイズ取得
+    k_h, k_w = kernel.shape
+    
+    # 画像サイズ取得
+    img_h, img_w = img.shape
+    
+    # カーネルの中心オフセット（半径）を計算
+    dy = k_h // 2
+    dx = k_w // 2
+    
+    # 画像の中心座標を計算
+    center_y = img_h // 2
+    center_x = img_w // 2
+    
+    # 画像からカーネルサイズ分の領域（ROI）を切り出す
+    # スライス範囲: 中心 - 半径  ～  中心 + 半径 + 1
+    # 注意: 画像サイズがカーネルより小さい場合のエラー処理は省略しています
+    roi = img[center_y - dy : center_y + dy + 1, 
+              center_x - dx : center_x + dx + 1]
+    
+    # 切り出した領域とカーネルの要素ごとの積をとり、総和を計算
+    result = np.sum(roi * kernel)
+    
+    return result

@@ -963,17 +963,20 @@
       <max_angular_velocity>2.0</max_angular_velocity>
       <min_angular_velocity>-2.0</min_angular_velocity>
       <topic>robot_1/cmd_vel</topic>
-      <odom_topic>robot_1/odom</odom_topic>
-      <tf_topic>robot_1/tf</tf_topic>
-      <frame_id>robot_1/odom</frame_id>
-      <child_frame_id>robot_1/base_footprint</child_frame_id>
-      <odom_publish_frequency>30</odom_publish_frequency>
+      <publish_odom_tf>false</publish_odom_tf>
     </plugin>
     <plugin name='gz::sim::systems::JointStatePublisher' filename='gz-sim-joint-state-publisher-system'>
       <joint_name>left_wheel_joint</joint_name>
       <joint_name>right_wheel_joint</joint_name>
       <topic>robot_1/joint_states</topic>
       <update_rate>30</update_rate>
+    </plugin>
+    <plugin name='gz::sim::systems::OdometryPublisher' filename='gz-sim-odometry-publisher-system'>
+      <odom_frame>robot_1/odom</odom_frame>
+      <robot_base_frame>robot_1/base_footprint</robot_base_frame>
+      <odom_topic>robot_1/odom</odom_topic>
+      <tf_topic>robot_1/tf</tf_topic>
+      <odom_publish_frequency>50</odom_publish_frequency>
     </plugin>
     <frame name='bump_front_center_joint' attached_to='base_link'>
       <pose>0.17499999999999999 0 0.039 0 0 0</pose>
